@@ -33,7 +33,7 @@ import { videoInVideo } from "./_utils/videoInVideo";
 
 import { ALL_JOBS } from "./_allJobs";
 import { createTestyShorts } from "./_utils/testy-shorts/testyShorts";
-import { createTestyLong } from "./_utils/testy-shorts/testyLong";
+import { createSingleVideoExam } from "./_utils/testy-shorts/testyLong";
 
 require("dotenv").config();
 
@@ -83,7 +83,7 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
     }
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
-      await createTestyLong(job);
+      await createSingleVideoExam(job);
     }
   }
 

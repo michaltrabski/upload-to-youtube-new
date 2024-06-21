@@ -7,7 +7,7 @@ import { ManipulateVideoOptions, Job } from "./types";
 import { f, p } from "./utils";
 
 const PREVENT_OVERRIDE = true;
-const LOG = false;
+const LOG = true;
 
 function log(...args: any[]) {
   if (LOG) console.log(...args);

@@ -18,7 +18,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.0",
     "image-size": "^1.1.1",
-    "jimp": "^0.22.10",
+    "jimp": "^0.22.12",
     "nodemon": "^2.0.15",
     "openai": "^4.47.2",
     "sharp": "^0.33.4",

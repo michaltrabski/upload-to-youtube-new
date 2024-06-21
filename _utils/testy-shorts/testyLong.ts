@@ -1,4 +1,4 @@
-import { copyFileSync, ensureDirSync, existsSync, readFileSync, writeFileSync } from "fs-extra";
+import { copyFileSync, ensureDirSync, existsSync, readFileSync, readJSON, readJSONSync, writeFileSync } from "fs-extra";
 const sharp = require("sharp");
 import {
   addMp3ToVideo,
@@ -17,30 +17,59 @@ import { convertSecondsToYtTimestamp, f, log, p, safeFileName, textToPng, textTo
 import { difficultQuestionsDB } from "./difficultQuestionsDB";
 
 import { examsB } from "./exams-b";
+import { ExamData, ExamDataObj } from "./data/types";
+import { createPngWithText, createTransparentPng, overlayPng } from "../jimp";
 
 // Example video produced with this code!
 // https://www.youtube.com/watch?v=hMVZgolg7JY
 
-export const createTestyLong = async (job: Job) => {
-  // const scale = 1;
-  // const WIDTH = 1920 / scale;
-  // const HEIGHT = 1080 / scale;
-  // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
-  // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 32 + 9999999;
-  // const VIDEO_DURATION_LIMIT = 999999999;
-
-  const scale = 4;
-  const WIDTH = 1920 / scale;
-  const HEIGHT = 1080 / scale;
-  const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
-  const PRODUCED_SHORTS_LIMIT_SLICE_TO = 1;
-  const VIDEO_DURATION_LIMIT = 3;
-
+export const createSingleVideoExam = async (job: Job) => {
   const { BASE_DIR, BASE_FOLDER } = job;
   const pb = (path: string) => p(BASE_FOLDER, path);
   const PRODUCED_FOLDER = `${BASE_FOLDER}_PRODUCED`;
   ensureDirSync(BASE_FOLDER);
   ensureDirSync(PRODUCED_FOLDER);
+
+  // Example usage
+
+  const transp = pb("_____transparent.png");
+  await createTransparentPng(1800, 1080, transp);
+
+  // Example usage
+
+  const texttt = pb("_____text.png");
+  await createPngWithText(900, 100, "red", "lorem ipsum dolor", {}, texttt);
+
+  const mergeddd = pb("_____merged.png");
+  await overlayPng(texttt, transp, mergeddd, 100, 200);
+
+  const scale = 1;
+  const WIDTH = 1920 / scale;
+  const HEIGHT = 1080 / scale;
+  const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
+  const PRODUCED_SHORTS_LIMIT_SLICE_TO = 9999999;
+  const VIDEO_DURATION_LIMIT = 999999999;
+
+  // const scale = 4;
+  // const WIDTH = 1920 / scale;
+  // const HEIGHT = 1080 / scale;
+  // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
+  // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 1;
+  // const VIDEO_DURATION_LIMIT = 0.5;
+
+  const exams_b_random: ExamDataObj = readJSONSync(p(__dirname, "data", "exams-b-random.json"));
+  const { exams } = exams_b_random;
+
+  // const randomExam = exams[Math.floor(Math.random() * exams.length)];
+  const randomExam = exams[0];
+  const { examSlug } = randomExam;
+  const examNumber = examSlug.split("-")[2];
+
+  const drivingQuestions = randomExam.examQuestions32.slice(
+    PRODUCED_SHORTS_LIMIT_SLICE_FROM,
+    PRODUCED_SHORTS_LIMIT_SLICE_TO
+  );
+
   const videoPath = p(BASE_DIR, "_ignore_files");
   const audioPath = p(BASE_DIR, "_ignore_files_mp3");
   const mp3_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp3");
@@ -55,30 +84,6 @@ export const createTestyLong = async (job: Job) => {
     bgColor: "transparent", // "#475569", // slate 600
     textColor: "black",
   });
-
-  const drivingQuestions: DrivingQuestion[] = examsB.slice(
-    PRODUCED_SHORTS_LIMIT_SLICE_FROM,
-    PRODUCED_SHORTS_LIMIT_SLICE_TO
-  );
-
-  // const drivingQuestions: DrivingQuestion[] = difficultQuestionsDB
-  //   .map((q) => ({
-  //     id: q.question.id,
-  //     text: q.question.text,
-  //     media: q.question.media,
-  //     r: q.question.r,
-  //     a: q.question.a,
-  //     b: q.question.b,
-  //     c: q.question.c,
-  //     categories: q.question.categories,
-  //   }))
-  //   // .filter((q) => q.categories.includes("b"))
-  //   // .filter((q) => q.media.includes(".mp4"))
-  //   // .filter((q) => q.r === "t" || q.r === "n")
-  //   // .filter((q) => q.r === "a" || q.r === "b" || q.r === "c")
-  //   .slice(PRODUCED_SHORTS_LIMIT_SLICE_FROM, PRODUCED_SHORTS_LIMIT_SLICE_TO);
-
-  // log("drivingQuestions", drivingQuestions.length, drivingQuestions[0]);
 
   let i = 0;
   const examVideosPaths: string[] = [];
@@ -100,11 +105,11 @@ export const createTestyLong = async (job: Job) => {
 
     const fn = async (): Promise<string> => {
       const resizeSourceMedia = await sharp(readFileSync(sourceMedia)).resize(WIDTH, HEIGHT).png().toBuffer();
-      writeFileSync(pb(`x__${i}_resizeSourceMedia.png`), resizeSourceMedia);
+      writeFileSync(pb(`x__${i}_${examNumber}_resizeSourceMedia.png`), resizeSourceMedia);
 
       const mp4_1000Resized = await manipulateVideo(
         mp4_1000,
-        pb(`_${i}_mp4_1000Resized.mp4`),
+        pb(`_${i}_${examNumber}_mp4_1000Resized.mp4`),
         0,
         VIDEO_DURATION_LIMIT,
         { size: `${WIDTH}x${HEIGHT}` }
@@ -112,8 +117,8 @@ export const createTestyLong = async (job: Job) => {
 
       const sourceMediaPngConvertedToVideo = await putPngOnVideo(
         mp4_1000Resized,
-        pb(`x__${i}_resizeSourceMedia.png`),
-        pb(`_${i}_source_video.mp4`)
+        pb(`x__${i}_${examNumber}_resizeSourceMedia.png`),
+        pb(`_${i}_${examNumber}_source_video.mp4`)
       );
 
       return sourceMediaPngConvertedToVideo;
@@ -121,7 +126,7 @@ export const createTestyLong = async (job: Job) => {
 
     const baseVideo = await manipulateVideo(
       isVideo ? sourceMedia : await fn(),
-      pb(`_${i}_1_base_video.mp4`),
+      pb(`_${i}_${examNumber}_1_base_video.mp4`),
       0,
       VIDEO_DURATION_LIMIT,
       {
@@ -131,17 +136,34 @@ export const createTestyLong = async (job: Job) => {
       }
     );
 
-    const [questionTextAsPng, qw, qh] = await textToPng(`${i}. ${text}`, pb(`x__${i}_2_question_text.png`), {
+    const xxx = await putPngOnVideo(baseVideo, mergeddd, pb(`_____xxxx.mp4`), 0, 0);
+
+    return;
+
+    const [questionTextAsPng, qw, qh] = await textToPng(
+      `${i}. ${text}`,
+      pb(`x__${i}_${examNumber}_2_question_text.png`),
+      {
+        maxWidth: WIDTH - 2 * 100,
+        fontSize: 50,
+        lineHeight: 60,
+        margin: 10,
+        bgColor: "#475569", // "transparent", // slate 600
+        textColor: "white",
+        // textAlign: "center",
+      }
+    );
+
+    const [answerA, wa, ha] = await textToPng(`A) ${a}`, pb(`x__${i}_${examNumber}_2_answer_a.png`), {
       maxWidth: WIDTH - 2 * 100,
       fontSize: 50,
       lineHeight: 60,
       margin: 10,
       bgColor: "#475569", // "transparent", // slate 600
       textColor: "white",
-      // textAlign: "center",
     });
 
-    const [answerA, wa, ha] = await textToPng(`A) ${a}`, pb(`x__${i}_2_answer_a.png`), {
+    const [answerB, wb, hb] = await textToPng(`B) ${b}`, pb(`x__${i}_${examNumber}_2_answer_b.png`), {
       maxWidth: WIDTH - 2 * 100,
       fontSize: 50,
       lineHeight: 60,
@@ -150,16 +172,7 @@ export const createTestyLong = async (job: Job) => {
       textColor: "white",
     });
 
-    const [answerB, wb, hb] = await textToPng(`B) ${b}`, pb(`x__${i}_2_answer_b.png`), {
-      maxWidth: WIDTH - 2 * 100,
-      fontSize: 50,
-      lineHeight: 60,
-      margin: 10,
-      bgColor: "#475569", // "transparent", // slate 600
-      textColor: "white",
-    });
-
-    const [answerC, wc, hc] = await textToPng(`C) ${c}`, pb(`x__${i}_2_answer_c.png`), {
+    const [answerC, wc, hc] = await textToPng(`C) ${c}`, pb(`x__${i}_${examNumber}_2_answer_c.png`), {
       maxWidth: WIDTH - 2 * 100,
       fontSize: 50,
       lineHeight: 60,
@@ -171,7 +184,7 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngText = await putPngOnVideo(
       baseVideo,
       questionTextAsPng,
-      pb(`_${i}_3_base_video_with_pngText.mp4`),
+      pb(`_${i}_${examNumber}_3_base_video_with_pngText.mp4`),
       100,
       HEIGHT - (a ? hc + hb + ha + qh : qh + 100)
     );
@@ -179,7 +192,7 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngTextA = await putPngOnVideo(
       baseVideoWithPngText,
       answerA,
-      pb(`_${i}_3_base_video_with_pngText_a.mp4`),
+      pb(`_${i}_${examNumber}_3_base_video_with_pngText_a.mp4`),
       100,
       HEIGHT - (hc + hb + ha)
     );
@@ -187,7 +200,7 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngTextB = await putPngOnVideo(
       baseVideoWithPngTextA,
       answerB,
-      pb(`_${i}_3_base_video_with_pngText_b.mp4`),
+      pb(`_${i}_${examNumber}_3_base_video_with_pngText_b.mp4`),
       100,
       HEIGHT - (hc + hb)
     );
@@ -195,7 +208,7 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngTextC = await putPngOnVideo(
       baseVideoWithPngTextB,
       answerC,
-      pb(`_${i}_3_base_video_with_pngText_c.mp4`),
+      pb(`_${i}_${examNumber}_3_base_video_with_pngText_c.mp4`),
       100,
       HEIGHT - hc
     );
@@ -203,7 +216,7 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngTextAndLogo = await putPngOnVideo(
       a ? baseVideoWithPngTextC : baseVideoWithPngText,
       logo,
-      pb(`_${i}_4_base_video_with_pngText_and_answers_and_logo.mp4`),
+      pb(`_${i}_${examNumber}_4_base_video_with_pngText_and_answers_and_logo.mp4`),
       WIDTH / 2 - 120,
       20
     );
@@ -213,14 +226,14 @@ export const createTestyLong = async (job: Job) => {
     const baseVideoWithPngTextAndLogoAndMp3 = await addMp3ToVideo(
       baseVideoWithPngTextAndLogo,
       textMp3,
-      pb(`_${i}_5_base_video_with_pngText_and_answers_and_logo_and_mp3.mp4`)
+      pb(`_${i}_${examNumber}_5_base_video_with_pngText_and_answers_and_logo_and_mp3.mp4`)
     );
 
     const duration = await getVideoDuration(baseVideoWithPngTextAndLogoAndMp3);
 
     const lastFrameWidthTextAndLogo = await manipulateVideo(
       baseVideoWithPngTextAndLogo,
-      pb(`_${i}_6_last_frame_width_text_and_logo.mp4`),
+      pb(`_${i}_${examNumber}_6_last_frame_width_text_and_logo.mp4`),
       duration - 0.05,
       duration,
       {
@@ -233,7 +246,7 @@ export const createTestyLong = async (job: Job) => {
     const lastFrameWidthTextAndLogo_1s = await addMp3ToVideo(
       lastFrameWidthTextAndLogo,
       mp3_1000,
-      pb(`_${i}_6_last_frame_width_text_and_logo_1s.mp4`)
+      pb(`_${i}_${examNumber}_6_last_frame_width_text_and_logo_1s.mp4`)
     );
 
     let answerText = "";
@@ -248,13 +261,13 @@ export const createTestyLong = async (job: Job) => {
     const lastFrameWidthTextAndLogoAndAnswer = await addMp3ToVideo(
       lastFrameWidthTextAndLogo,
       correctAnswerMp3,
-      pb(`_${i}_7_last_frame_width_text_and_logo_and_answer.mp4`)
+      pb(`_${i}_${examNumber}_7_last_frame_width_text_and_logo_and_answer.mp4`)
     );
 
     const lastFrameWithQuestionText = await putPngOnVideo(
       lastFrameWidthTextAndLogo,
       questionTextAsPng,
-      pb(`_${i}_7_last_frame_with_question_text.mp4`),
+      pb(`_${i}_${examNumber}_7_last_frame_with_question_text.mp4`),
       100,
       HEIGHT - 200
     );
@@ -262,7 +275,7 @@ export const createTestyLong = async (job: Job) => {
     const lastFrameWithAnswerA = await putPngOnVideo(
       lastFrameWidthTextAndLogo,
       questionTextAsPng,
-      pb(`_${i}_last_frame_with_answer_a.mp4`),
+      pb(`_${i}_${examNumber}_last_frame_with_answer_a.mp4`),
       100,
       HEIGHT - 200
     );
@@ -270,7 +283,7 @@ export const createTestyLong = async (job: Job) => {
     const lastFrameWithQuestionTextAndLogo = await putPngOnVideo(
       lastFrameWithQuestionText,
       logo,
-      pb(`_${i}_lastFrameWithQuestionTextAndLogo.mp4`),
+      pb(`_${i}_${examNumber}_lastFrameWithQuestionTextAndLogo.mp4`),
       WIDTH / 2 - 120,
       20
     );
@@ -278,26 +291,28 @@ export const createTestyLong = async (job: Job) => {
     const lastFrameMp4_1s = await addMp3ToVideo(
       lastFrameWithQuestionTextAndLogo,
       mp3_1000,
-      pb(`_${i}_lastFrame_1s.mp4`)
+      pb(`_${i}_${examNumber}_lastFrame_1s.mp4`)
     );
 
     const videoWithAnswer = await addMp3ToVideo(
       lastFrameWithQuestionTextAndLogo,
       correctAnswerMp3,
-      pb(`_${i}_videoWithAnswer.mp4`)
+      pb(`_${i}_${examNumber}_videoWithAnswer.mp4`)
     );
 
     const singleQuestion = await mergeVideos(
       [
         baseVideoWithPngTextAndLogoAndMp3,
         lastFrameWidthTextAndLogo_1s,
+        lastFrameWidthTextAndLogo_1s,
         lastFrameWidthTextAndLogoAndAnswer,
         lastFrameWidthTextAndLogo_1s,
+        lastFrameWidthTextAndLogo_1s,
       ],
-      pb(`_${i}_8_single_question.mp4`)
+      pb(`_${i}_${examNumber}_8_single_question.mp4`)
     );
 
-    copyFileSync(singleQuestion, pb(`__${i}_8_single_question.mp4`));
+    copyFileSync(singleQuestion, pb(`__${i}_${examNumber}_8_single_question.mp4`));
 
     examVideosPaths.push(singleQuestion);
 
@@ -307,26 +322,35 @@ export const createTestyLong = async (job: Job) => {
 
     if (media) {
       // create Yt short for each question with media
-      const bg = await manipulateVideo(baseVideo, pb(`_${i}_${id}_bg.mp4`), 0, VIDEO_DURATION_LIMIT, {
+      const bg = await manipulateVideo(baseVideo, pb(`_${i}_${examNumber}_${id}_bg.mp4`), 0, VIDEO_DURATION_LIMIT, {
         size: `${WIDTH}x${HEIGHT}`,
         blur: 15,
         crop: 10,
       });
 
-      const inner = await manipulateVideo(baseVideo, pb(`_${i}_${id}_inner.mp4`), 0, VIDEO_DURATION_LIMIT, {
-        size: `${WIDTH / 2}x${HEIGHT / 2}`,
-        blur: 0,
-        crop: 5,
-      });
+      const inner = await manipulateVideo(
+        baseVideo,
+        pb(`_${i}_${examNumber}_${id}_inner.mp4`),
+        0,
+        VIDEO_DURATION_LIMIT,
+        {
+          size: `${WIDTH / 2}x${HEIGHT / 2}`,
+          blur: 0,
+          crop: 5,
+        }
+      );
 
-      const videoInVideo = await putVideoOnVideo(bg, inner, pb(`_${i}_${id}_video_in_video.mp4`));
+      const videoInVideo = await putVideoOnVideo(bg, inner, pb(`_${i}_${examNumber}_${id}_video_in_video.mp4`));
 
-      const videoInVideoVertical = await makeVideoVertical(videoInVideo, pb(`_${i}_${id}_video_in_video_vertical.mp4`));
+      const videoInVideoVertical = await makeVideoVertical(
+        videoInVideo,
+        pb(`_${i}_${examNumber}_${id}_video_in_video_vertical.mp4`)
+      );
 
       // const videoInVideoVerticalWithLogo = await putPngOnVideo(
       //   videoInVideoVertical  ,
       //   logo,
-      //   pb( `_${i}_${id}_video_in_video_vertical_with_logo.mp4`),
+      //   pb( `_${i}_${examNumber}_${id}_video_in_video_vertical_with_logo.mp4`),
       //   20,
       //   100
       // );
@@ -334,14 +358,14 @@ export const createTestyLong = async (job: Job) => {
       const videoInVideoVerticalWithLogoAndMp3 = await addMp3ToVideo(
         videoInVideoVertical,
         p(audioPath, textToSlug160(text) + ".mp3"),
-        pb(`_${i}_videoInVideoVerticalWithLogoAndMp3.mp4`)
+        pb(`_${i}_${examNumber}_videoInVideoVerticalWithLogoAndMp3.mp4`)
       );
 
       const duration = await getVideoDuration(videoInVideoVertical);
 
       const lastFrameVideoInVideoVerticalWithLogo = await manipulateVideo(
         videoInVideoVertical,
-        pb(`_${i}_last_frame_vertical.mp4`),
+        pb(`_${i}_${examNumber}_last_frame_vertical.mp4`),
         duration - 0.05,
         duration,
         {}
@@ -350,18 +374,18 @@ export const createTestyLong = async (job: Job) => {
       const verticalAnswer = await addMp3ToVideo(
         lastFrameVideoInVideoVerticalWithLogo,
         correctAnswerMp3,
-        pb(`_${i}_vertical_answer.mp4`)
+        pb(`_${i}_${examNumber}_vertical_answer.mp4`)
       );
 
       const verticalLastFrameMp4_1s = await addMp3ToVideo(
         lastFrameVideoInVideoVerticalWithLogo,
         mp3_1000,
-        pb(`_${i}_vertical_last_frame_1s.mp4`)
+        pb(`_${i}_${examNumber}_vertical_last_frame_1s.mp4`)
       );
 
       const verticalSingleQuestion = await mergeVideos(
         [videoInVideoVerticalWithLogoAndMp3, verticalLastFrameMp4_1s, verticalAnswer, verticalLastFrameMp4_1s],
-        pb(`${i}_single_question_vertical.mp4`)
+        pb(`${i}_${examNumber}_single_question_vertical.mp4`)
       );
 
       copyFileSync(verticalSingleQuestion, p(PRODUCED_FOLDER, f(verticalSingleQuestion).nameWithExt));
@@ -381,7 +405,7 @@ export const createTestyLong = async (job: Job) => {
     log(i + 1, q.text);
   });
 
-  await mergeVideos(examVideosPaths, pb(`___exam.mp4`));
+  await mergeVideos(examVideosPaths, pb(`___exam_${examSlug}.mp4`));
 
   const videoDescriptionText = exam_horizontal_timestamps
     .map(({ text, startTime }, i) => `${convertSecondsToYtTimestamp(startTime)} ${i + 1}) ${text}`)
