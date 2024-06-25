@@ -17,6 +17,7 @@
     "dotenv": "^16.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.0",
+    "get-video-duration": "^4.1.0",
     "image-size": "^1.1.1",
     "jimp": "^0.22.12",
     "nodemon": "^2.0.15",

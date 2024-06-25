@@ -1,6 +1,8 @@
 import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 const sharp = require("sharp");
+import { exec } from "child_process";
+const { getVideoDurationInSeconds } = require("get-video-duration");
 
 import fs, { copyFileSync, copySync, exists, existsSync, renameSync } from "fs-extra";
 import { ManipulateVideoOptions, Job } from "./types";
@@ -505,21 +507,44 @@ export const pngToVideo = async (pngPath: string, producedVideoPath: string) => 
 };
 
 export const getVideoDuration = async (videoPath: string): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(videoPath, function (err, metadata) {
-      if (err) {
-        console.error(err);
-        reject(err);
-        return;
-      }
+  const stream = fs.createReadStream(videoPath);
 
-      const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
-      const duration = +(videoStream?.duration || 0);
+  const duration = await getVideoDurationInSeconds(stream);
 
-      resolve(duration);
-    });
-  });
+  return duration;
+  // return new Promise((resolve, reject) => {
+  //   ffmpeg.ffprobe(videoPath, function (err, metadata) {
+  //     if (err) {
+  //       console.error(err);
+  //       reject(err);
+  //       return;
+  //     }
+
+  //     const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
+  //     const duration = +(videoStream?.duration || 0);
+
+  //     resolve(duration);
+  //   });
+  // });
 };
+
+// export const getVideoDuration = (videoPath: string): Promise<number> => {
+//   return new Promise((resolve, reject) => {
+//     exec(
+//       `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`,
+//       (error, stdout) => {
+//         if (error) {
+//           console.error("Error getting video duration:", error);
+//           reject(error);
+//           return;
+//         }
+
+//         const duration = parseFloat(stdout);
+//         resolve(isNaN(duration) ? 0 : duration);
+//       }
+//     );
+//   });
+// };
 
 export const mergeMp3Files = async (mp3Files: string[], producedMp3Path: string) => {
   return new Promise((resolve, reject) => {

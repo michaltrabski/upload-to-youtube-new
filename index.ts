@@ -84,6 +84,11 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
       await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
     }
   }
 

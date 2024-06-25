@@ -263,6 +263,15 @@ export const textToPng = async (
   procucedFileLocation: string,
   options: any
 ): Promise<[string, number, number]> => {
+  if (existsSync(procucedFileLocation)) {
+    const dimensions = sizeOf(procucedFileLocation);
+
+    const width = dimensions.width;
+    const height = dimensions.height;
+
+    return [procucedFileLocation, width, height];
+  }
+
   const dataUriLogo = await textToImage.generate(text, {
     fontFamily: "Arial",
     // maxWidth: 250,
