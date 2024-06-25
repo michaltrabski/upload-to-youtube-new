@@ -595,10 +595,6 @@ export async function mergeVideos(videoPaths: string[], producedVideoPath: strin
     });
 
     command
-      // .inputOptions("-framerate 12")
-      // .inputOptions("-t 2") // Set the video duration (2 seconds in this example)
-      // .videoCodec("libx264") // Specify the video codec
-      // .audioCodec("aac") // Specify the audio codec
       .on("error", (err: any) => reject(`2345234545: ${err}`))
       .on("progress", (progress: any) => log(`    progress: ${Math.floor(progress.percent)}%`))
       .on("end", () => {

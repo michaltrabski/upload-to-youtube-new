@@ -73,17 +73,16 @@ export async function createScreenshot(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const t = timeForScreenshot.replace(/:/g, "_");
-    const pngFileName = `${path.basename(videoPath, path.extname(videoPath))}_${t}.png`;
+    const pngFileName = f(videoPath).name + "_" + t + ".png";
 
-    log(111111111111111111, timeForScreenshot, t, pngFileName);
+    log(111111, { outputPath, t, pngFileName });
     ffmpeg(videoPath)
       .on("end", function () {
-        // console.log(`Screenshots taken: from ${videoPath}`);
         resolve(pngFileName);
       })
       .screenshots({
         count: 1,
-        folder: outputPath,
+        folder: f(outputPath).path,
         filename: pngFileName, // Output file name pattern with video file name
         size: "1280x720", // Set dimensions to full HD
         timemarks: [timeForScreenshot], // Take screenshot at 4 second
