@@ -27,7 +27,15 @@ import {
   trimVideoFromFolder,
 } from "./_utils/utils";
 import { Job, Format, CreatedVideoData } from "./_utils/types";
-import { createSmallVideoForTranscript, createVideo, mergeVideos, resizeVideo } from "./_utils/ffmpeg";
+import {
+  createSmallVideoForTranscript,
+  createVideo,
+  getVideoDuration,
+  mergeVideos,
+  mergeVideosWithBgMusic,
+  resizeVideo,
+  trimMp3,
+} from "./_utils/ffmpeg";
 import { mergeTranscriptFromAllChunksFromAllVideos } from "./_utils/transcript";
 import { videoInVideo } from "./_utils/videoInVideo";
 
@@ -82,13 +90,42 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
       await createTestyShorts(job);
     }
 
+    if (TYPE === "MERGE_VIDEOS") {
+      const folder = job.BASE_FOLDER;
+      ensureDirSync(folder);
+      const files = readdirSync(folder);
+      const mp4Files = files
+        .filter((file) => file.toLowerCase().endsWith(".mp4") || file.toLowerCase().endsWith(".MP4"))
+        .filter((video) => !video.includes("temp"));
+
+      const videos = mp4Files.map((file) => p(folder, file));
+
+      if (videos.length === 0) {
+        log("No videos to merge");
+        continue;
+      }
+
+      videos.forEach((video, i) => log(i + 1, "video= ", video));
+
+      const mergedVideoPath = p(folder, "merged.mp4");
+      await mergeVideos(videos, mergedVideoPath);
+
+      const thumbnail1 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_1.png`), "00:04:11");
+      const thumbnail2 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_2.png`), "00:08:22");
+      const thumbnail3 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_3.png`), "00:12:33");
+
+      const duration = await getVideoDuration(mergedVideoPath);
+      log("duration", duration);
+
+      const bgMp3 = p(__dirname, "_mp3", "music1.mp3");
+      const bgMp3Trimmed = await trimMp3(bgMp3, p(folder, "bgMp3Trimmed.mp3"), 0, duration);
+      const mergedVideoPathWithBgMusic = p(folder, "mergedWithBgMusic.mp4");
+
+      await mergeVideosWithBgMusic([mergedVideoPath], mergedVideoPathWithBgMusic, bgMp3Trimmed);
+    }
+
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
       await createSingleVideoExam(job);
-      // await createSingleVideoExam(job);
-      // await createSingleVideoExam(job);
-      // await createSingleVideoExam(job);
-      // await createSingleVideoExam(job);
-      // await createSingleVideoExam(job);
     }
   }
 

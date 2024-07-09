@@ -47,7 +47,7 @@ export const overlayPng = async (
 
   // Save the combined image as PNG
   await backgroundImage.writeAsync(procucedFileLocation);
-  console.log(`Overlay image created: ${procucedFileLocation}`);
+  // console.log(`Overlay image created: ${procucedFileLocation}`);
 
   const dimensions = sizeOf(procucedFileLocation);
 

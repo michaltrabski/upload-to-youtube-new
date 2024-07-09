@@ -389,6 +389,34 @@ export async function makeVideoVertical(originalVideoPath: string, producedVideo
   });
 }
 
+// export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVideoPath: string): Promise<string> => {
+//   return new Promise((resolve, reject) => {
+//     if (PREVENT_OVERRIDE) {
+//       if (existsSync(producedVideoPath)) {
+//         log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
+//         resolve(producedVideoPath);
+//         return;
+//       }
+//     }
+
+//     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
+
+//     copyFileSync(mp3, f(producedVideoPath).path + "/" + f(mp3).nameWithExt);
+
+//     ffmpeg()
+//       .input(videoPath)
+//       .input(mp3)
+//       .output(producedVideoPathTemp)
+//       .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+//       .on("end", () => {
+//         renameSync(producedVideoPathTemp, producedVideoPath);
+//         resolve(producedVideoPath);
+//       })
+//       .on("error", (err: any) => reject(err))
+//       .run();
+//   });
+// };
+
 export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVideoPath: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (PREVENT_OVERRIDE) {
@@ -401,11 +429,20 @@ export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVide
 
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
 
-    // copyFileSync(mp3, f(producedVideoPath).path + "/" + f(mp3).nameWithExt);
-
     ffmpeg()
       .input(videoPath)
       .input(mp3)
+      .complexFilter([
+        "[0:v]copy[v]", // Example of applying a scale filter instead of copy
+        "[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a]", // Convert the audio stream to a compatible format
+      ])
+      .outputOptions([
+        "-map [v]", // Map the video stream from the complex filter
+        "-map [a]", // Map the audio stream from the complex filter
+        "-c:v libx264", // Specify the video codec (re-encode with H.264)
+        "-crf 23", // Specify the Constant Rate Factor (quality level) for H.264, where lower values mean better quality
+        "-c:a aac", // Use AAC codec for audio
+      ])
       .output(producedVideoPathTemp)
       .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
       .on("end", () => {
@@ -587,7 +624,7 @@ export async function mergeVideos(videoPaths: string[], producedVideoPath: strin
 
     const rnd = Math.floor(Math.random() * 999999) + 1;
 
-    const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${rnd}.mp4`);
+    const producedVideoPathTemp = p(f(producedVideoPath).path, `_______temp_${rnd}.mp4`);
     let command = ffmpeg();
 
     videoPaths.forEach((videoPath, i) => {
@@ -602,6 +639,58 @@ export async function mergeVideos(videoPaths: string[], producedVideoPath: strin
         resolve(producedVideoPath);
       })
       .mergeToFile(producedVideoPathTemp, f(producedVideoPath).path);
+  });
+}
+
+export async function mergeVideosWithBgMusic(
+  videoPaths: string[],
+  producedVideoPath: string,
+  mp3Path: string
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (PREVENT_OVERRIDE) {
+      if (existsSync(producedVideoPath)) {
+        log(`\n mergeVideosWithBgMusic() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
+        resolve(producedVideoPath);
+        return;
+      }
+    }
+
+    const rnd = Math.floor(Math.random() * 999999) + 1;
+    const producedVideoPathTemp = p(f(producedVideoPath).path, `_______temp_${rnd}.mp4`);
+
+    let command = ffmpeg();
+
+    // Add each video as an input
+    videoPaths.forEach((videoPath) => {
+      command = command.input(videoPath);
+    });
+
+    // Add the MP3 as an input for the background music
+    command = command.input(mp3Path);
+
+    // Apply a complex filter to mix the video audio with the MP3 audio
+    // Assuming all videos have the same audio configuration
+    command
+      .complexFilter([
+        // Mix the audio from the videos and the MP3 file
+        // Adjust the inputs ([0:a][1:a]) based on the number of videos and their order
+        // This example assumes one video and one MP3 file
+        `[0:a][1:a]amix=inputs=${videoPaths.length + 1}:duration=longest[a]`,
+      ])
+      .outputOptions([
+        "-map 0:v", // Map the video stream from the first video input
+        "-map [a]", // Map the mixed audio stream
+      ])
+      .audioCodec("aac") // Set audio codec
+      .videoCodec("copy") // Copy the video stream without re-encoding
+      .on("error", (err: any) => reject(`Error: ${err}`))
+      .on("progress", (progress: any) => log(`    progress: ${Math.floor(progress.percent)}%`))
+      .on("end", () => {
+        renameSync(producedVideoPathTemp, producedVideoPath);
+        resolve(producedVideoPath);
+      })
+      .save(producedVideoPathTemp);
   });
 }
 
@@ -655,3 +744,29 @@ export async function mergeVideos(videoPaths: string[], producedVideoPath: strin
 //       .run();
 //   });
 // };
+
+export const trimMp3 = async (mp3Path: string, producedMp3Path: string, from: number, to: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (PREVENT_OVERRIDE) {
+      if (existsSync(producedMp3Path)) {
+        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedMp3Path, "\n\n");
+        resolve(producedMp3Path);
+        return;
+      }
+    }
+
+    const producedMp3PathTemp = p(f(producedMp3Path).path, `x__temp_${Math.random()}.mp3`);
+
+    ffmpeg()
+      .input(mp3Path)
+      .setStartTime(from)
+      .setDuration(to - from)
+      .output(producedMp3PathTemp)
+      .on("end", () => {
+        renameSync(producedMp3PathTemp, producedMp3Path);
+        resolve(producedMp3Path);
+      })
+      .on("error", (err: any) => reject(err))
+      .run();
+  });
+};

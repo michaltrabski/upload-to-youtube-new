@@ -5,7 +5,7 @@ const makeHorizontalVideos: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 0.5, // 0.3
+  TRIM_EALIER: 1, // 0.3
   TRIM_LATER: 1, // 0.5
   MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
@@ -13,9 +13,9 @@ const makeHorizontalVideos: Job = {
   BASE_FOLDER: p(__dirname, "videos-horizontal"),
   PRODUCED_FOLDER: p(__dirname, "PRODUCED_HORIZONTAL"),
   FLIP_CHUNK: false,
-  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: true,
-  CREATE_VERTICAL_CHUNKS: true,
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
 const SETTINGS_VIDEO_IN_VIDEO: any = {
@@ -82,22 +82,22 @@ const SETTINGS_VERTICAL: Job = {
   PRODUCED_FOLDER: p(__dirname, "PRODUCED_VERTICAL"),
 };
 
-const createShortVideosWithDrivingQuestions: Job = {
-  TYPE: "MAKE_SHORTS_WITH_DRIVING_QUESTIONS",
-  ORIENTATION: "VERTICAL",
-  DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 0.5, // 0.3
-  TRIM_LATER: 1, // 0.5
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
-  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
-  BASE_DIR: p(__dirname),
-  BASE_FOLDER: p(__dirname, "testy-shorts"),
-  PRODUCED_FOLDER: p(__dirname, "testy-shorts-PRODUCED"),
-  FLIP_CHUNK: false,
-  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: false,
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
-};
+// const createShortVideosWithDrivingQuestions: Job = {
+//   TYPE: "MAKE_SHORTS_WITH_DRIVING_QUESTIONS",
+//   ORIENTATION: "VERTICAL",
+//   DEEPGRAM_LANG: "pl", // "en" | "pl"
+//   TRIM_EALIER: 0.5, // 0.3
+//   TRIM_LATER: 1, // 0.5
+//   MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+//   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+//   BASE_DIR: p(__dirname),
+//   BASE_FOLDER: p(__dirname, "testy-shorts"),
+//   PRODUCED_FOLDER: p(__dirname, "testy-shorts-PRODUCED"),
+//   FLIP_CHUNK: false,
+//   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+//   CREATE_VERTICAL_CHUNKS: false,
+//   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+// };
 
 const createLongVideosWithDrivingQuestions: Job = {
   TYPE: "MAKE_LONG_WITH_DRIVING_QUESTIONS",
@@ -129,15 +129,33 @@ const eBikeHorizontalVideo: Job = {
   FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
   CREATE_VERTICAL_CHUNKS: true,
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
-  MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: true,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+  MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
+const mergeVideos: Job = {
+  TYPE: "MERGE_VIDEOS",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 1, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "merge-videos"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
 export const ALL_JOBS: Job[] = [
   { ...makeHorizontalVideos, EXECUTE: false },
   { ...eBikeHorizontalVideo, EXECUTE: false },
 
-  { ...makeVideosWithRecordedExams, EXECUTE: false },
-  { ...createShortVideosWithDrivingQuestions, EXECUTE: false },
+  // { ...makeVideosWithRecordedExams, EXECUTE: false },
+  // { ...createShortVideosWithDrivingQuestions, EXECUTE: false },
+
+  { ...mergeVideos, EXECUTE: false },
   { ...createLongVideosWithDrivingQuestions, EXECUTE: true },
 ];
