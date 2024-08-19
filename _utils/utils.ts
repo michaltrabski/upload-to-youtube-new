@@ -13,7 +13,7 @@ import fs, {
 import path from "path";
 import ffmpeg from "fluent-ffmpeg";
 import { Job } from "./types";
-import { createVideo } from "./ffmpeg";
+import { createVideo, getVideoDuration } from "./ffmpeg";
 
 export const p = path.resolve;
 export const log = console.log;
@@ -291,4 +291,58 @@ export const textToPng = async (
   const height = dimensions.height;
 
   return [procucedFileLocation, width, height];
+};
+
+export const createVerticalChunksShorterThan1Min = async (
+  job: Job,
+  originalVideoPath: string,
+  producedChunkPathVertical: string,
+  trimStart: number,
+  trimEnd: number
+) => {
+  await createVideo(job, originalVideoPath, producedChunkPathVertical, trimStart, trimEnd, "VERTICAL");
+
+  const duration = await getVideoDuration(producedChunkPathVertical);
+
+  if (duration > 60) {
+    const producedChunkPathVertical_a =
+      f(producedChunkPathVertical).path + "/a_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_a, 0, 40, "VERTICAL");
+
+    const producedChunkPathVertical_b =
+      f(producedChunkPathVertical).path + "/b_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_b, 40, 40 * 2, "VERTICAL");
+  }
+
+  if (duration > 60 * 2) {
+    const producedChunkPathVertical_c =
+      f(producedChunkPathVertical).path + "/c_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_c, 40 * 2, 40 * 3, "VERTICAL");
+  }
+
+  if (duration > 60 * 3) {
+    const producedChunkPathVertical_d =
+      f(producedChunkPathVertical).path + "/d_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_d, 40 * 3, 40 * 4, "VERTICAL");
+  }
+
+  if (duration > 60 * 4) {
+    const producedChunkPathVertical_e =
+      f(producedChunkPathVertical).path + "/e_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_e, 40 * 4, 40 * 5, "VERTICAL");
+  }
+
+  if (duration > 60 * 5) {
+    const producedChunkPathVertical_f =
+      f(producedChunkPathVertical).path + "/f_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_f, 40 * 5, 40 * 6, "VERTICAL");
+  }
+
+  if (duration > 60 * 6) {
+    const producedChunkPathVertical_g =
+      f(producedChunkPathVertical).path + "/g_" + f(producedChunkPathVertical).nameWithExt;
+    await createVideo(job, producedChunkPathVertical, producedChunkPathVertical_g, 40 * 6, 40 * 7, "VERTICAL");
+  }
+
+  console.log({ duration, producedChunkPathVertical });
 };

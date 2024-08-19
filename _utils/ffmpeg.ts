@@ -16,7 +16,7 @@ function log(...args: any[]) {
 }
 
 export function createVideo(
-  settings: Job,
+  job: Job,
   // fps: number,
   originalVideoPath: string,
   producedVideoPath: string,
@@ -27,7 +27,7 @@ export function createVideo(
   return new Promise((resolve, reject) => {
     if (PREVENT_OVERRIDE) {
       if (existsSync(producedVideoPath)) {
-        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
+        log(`makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
         resolve(producedVideoPath);
         return;
       }
@@ -48,7 +48,7 @@ export function createVideo(
 
     let newFlip: any = [];
 
-    if (settings.FLIP_CHUNK) {
+    if (job.FLIP_CHUNK) {
       newFlip = ["vflip", "hflip"];
     }
 
@@ -57,7 +57,7 @@ export function createVideo(
         .input(originalVideoPath)
         .setStartTime(originalVideoTrimFrom)
         .setDuration(originalVideoTrimTo - originalVideoTrimFrom)
-        .fps(29.97)
+        // .fps(29.97)
         .videoFilters(newFlip)
         .output(producedVideoPathTemp)
         .on("end", () => {
@@ -79,7 +79,7 @@ export function createVideo(
         // .noAudio()
         // .videoFilters("fade=in:0:30")
         // .videoFilters("fade=in:0:30", "pad=640:480:0:40:violet")
-        // .size(`${50}x?`) // michal
+        // .size(`${400}x?`) // michal
         // .size(`${1920}x${1080}y`)
         .run();
     }
@@ -147,6 +147,7 @@ export function resizeVideo(
       .input(originalVideoPath)
       // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
       .videoFilters(newFlip)
+      .fps(29.97)
       .output(producedVideoPathTemp)
       .on("end", () => {
         renameSync(producedVideoPathTemp, producedVideoPath);
@@ -188,6 +189,7 @@ export function createSmallVideoForTranscript(originalVideoPath: string, produce
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);
       })
+      .fps(29.97)
       .on("error", (err: any) => reject(err))
       .on("progress", (progress: any) => {
         const newPercent = Math.floor(progress.percent);
@@ -255,6 +257,9 @@ export async function manipulateVideo(
     // if (options.volume) {
     //   command.audioFilters(`volume=${options.volume}`);
     // }
+
+    // add codec
+    // command.videoCodec("libx264");
 
     if (options.crop && options.crop > 0) {
       ffmpeg.ffprobe(originalVideoPath, function (err, metadata) {
@@ -344,6 +349,7 @@ export function putVideoOnVideo(
         ffmpeg()
           .input(originalVideo1Path)
           .input(originalVideo2Path)
+          .fps(29.97)
           .complexFilter([
             `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,0,20)'`,
             // `[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,20)'`,
@@ -377,6 +383,7 @@ export async function makeVideoVertical(originalVideoPath: string, producedVideo
     ffmpeg()
       .input(originalVideoPath)
       .output(producedVideoPathTemp)
+      .fps(29.97)
       .on("end", () => {
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);
@@ -388,34 +395,6 @@ export async function makeVideoVertical(originalVideoPath: string, producedVideo
       .run();
   });
 }
-
-// export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVideoPath: string): Promise<string> => {
-//   return new Promise((resolve, reject) => {
-//     if (PREVENT_OVERRIDE) {
-//       if (existsSync(producedVideoPath)) {
-//         log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-//         resolve(producedVideoPath);
-//         return;
-//       }
-//     }
-
-//     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
-
-//     copyFileSync(mp3, f(producedVideoPath).path + "/" + f(mp3).nameWithExt);
-
-//     ffmpeg()
-//       .input(videoPath)
-//       .input(mp3)
-//       .output(producedVideoPathTemp)
-//       .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
-//       .on("end", () => {
-//         renameSync(producedVideoPathTemp, producedVideoPath);
-//         resolve(producedVideoPath);
-//       })
-//       .on("error", (err: any) => reject(err))
-//       .run();
-//   });
-// };
 
 export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVideoPath: string): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -432,6 +411,7 @@ export const addMp3ToVideo = async (videoPath: string, mp3: string, producedVide
     ffmpeg()
       .input(videoPath)
       .input(mp3)
+      .fps(29.97)
       .complexFilter([
         "[0:v]copy[v]", // Example of applying a scale filter instead of copy
         "[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a]", // Convert the audio stream to a compatible format
@@ -475,6 +455,7 @@ export const putPngOnVideo = async (
     ffmpeg()
       .input(videoPath)
       .input(pngPath)
+      .fps(29.97)
       .complexFilter([
         {
           filter: "overlay",
@@ -538,7 +519,7 @@ export const pngToVideo = async (pngPath: string, producedVideoPath: string) => 
       })
       .on("error", (err: any) => reject(err))
       .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
-
+      .fps(29.97)
       .run();
   });
 };
@@ -549,39 +530,7 @@ export const getVideoDuration = async (videoPath: string): Promise<number> => {
   const duration = await getVideoDurationInSeconds(stream);
 
   return duration;
-  // return new Promise((resolve, reject) => {
-  //   ffmpeg.ffprobe(videoPath, function (err, metadata) {
-  //     if (err) {
-  //       console.error(err);
-  //       reject(err);
-  //       return;
-  //     }
-
-  //     const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
-  //     const duration = +(videoStream?.duration || 0);
-
-  //     resolve(duration);
-  //   });
-  // });
 };
-
-// export const getVideoDuration = (videoPath: string): Promise<number> => {
-//   return new Promise((resolve, reject) => {
-//     exec(
-//       `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`,
-//       (error, stdout) => {
-//         if (error) {
-//           console.error("Error getting video duration:", error);
-//           reject(error);
-//           return;
-//         }
-
-//         const duration = parseFloat(stdout);
-//         resolve(isNaN(duration) ? 0 : duration);
-//       }
-//     );
-//   });
-// };
 
 export const mergeMp3Files = async (mp3Files: string[], producedMp3Path: string) => {
   return new Promise((resolve, reject) => {
@@ -608,6 +557,7 @@ export const mergeMp3Files = async (mp3Files: string[], producedMp3Path: string)
         renameSync(producedMp3PathTemp, producedMp3Path);
         resolve(producedMp3Path);
       })
+      .fps(29.97)
       .mergeToFile(producedMp3PathTemp, f(producedMp3Path).path);
   });
 };
@@ -638,6 +588,7 @@ export async function mergeVideos(videoPaths: string[], producedVideoPath: strin
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);
       })
+      // .fps(29.97)
       .mergeToFile(producedVideoPathTemp, f(producedVideoPath).path);
   });
 }
@@ -690,60 +641,10 @@ export async function mergeVideosWithBgMusic(
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);
       })
+      .fps(29.97)
       .save(producedVideoPathTemp);
   });
 }
-
-// export const convertPngToVideo = async (pngPath: string, mp3: string, producedVideoPath: string): Promise<string> => {
-//   return new Promise((resolve, reject) => {
-
-//     if (PREVENT_OVERRIDE) {
-//       if (existsSync(producedVideoPath)) {
-//         log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-//         resolve(producedVideoPath);
-//         return;
-//       }
-//     }
-
-//     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
-
-//     ffmpeg()
-//       .input(pngPath)
-//       .input(mp3)
-//       .input(mp3)
-//       .input(mp3)
-//       .input(mp3)
-//       .fps(29.97)
-//       .output(producedVideoPathTemp)
-//       .on("end", () => {
-//         renameSync(producedVideoPathTemp, producedVideoPath);
-//         resolve(producedVideoPath);
-//       })
-//       .on("error", (err: any) => reject(err))
-//       .run();
-//   });
-// };
-
-// export const convertPngsArrToVideo = async (pngPaths: string[], producedVideoPath: string) => {
-//   return new Promise((resolve, reject) => {
-//     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
-
-//     const command = ffmpeg();
-
-//     pngPaths.forEach((pngPath) => {
-//       command.input(pngPath);
-//     });
-
-//     command
-//       .output(producedVideoPathTemp)
-//       .on("end", () => {
-//         renameSync(producedVideoPathTemp, producedVideoPath);
-//         resolve(producedVideoPath);
-//       })
-//       .on("error", (err: any) => reject(err))
-//       .run();
-//   });
-// };
 
 export const trimMp3 = async (mp3Path: string, producedMp3Path: string, from: number, to: number): Promise<string> => {
   return new Promise((resolve, reject) => {

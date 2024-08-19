@@ -14,11 +14,13 @@ import {
   writeJSONSync,
 } from "fs-extra";
 import path from "path";
+import { getSilentParts } from "@remotion/renderer";
 
 import { ChunkFromVideo, TranscriptionFormDeepgram, VideoChunk } from "./types";
 import {
   createHtmlPreview,
   createScreenshot,
+  createVerticalChunksShorterThan1Min,
   f,
   getEnv,
   log,
@@ -31,8 +33,10 @@ import {
   createSmallVideoForTranscript,
   createVideo,
   getVideoDuration,
+  manipulateVideo,
   mergeVideos,
   mergeVideosWithBgMusic,
+  putVideoOnVideo,
   resizeVideo,
   trimMp3,
 } from "./_utils/ffmpeg";
@@ -65,11 +69,8 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
     if (TYPE === "MAKE_HORIZONTAL_VIDEO") {
       ensureDir(job.BASE_FOLDER);
       ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
-      moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
+      await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
       const allVideosHorizontal = await createAllVideosData(job);
-      // const allVideosHorizontalSlim = createAllVideosDataSlim(allVideosHorizontal);
-      // createHtmlPreview("allVideosHorizontal", allVideosHorizontal);
-      // createHtmlPreview("allVideosHorizontalSlim", allVideosHorizontalSlim);
 
       await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
 
@@ -125,6 +126,16 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
     }
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
+      await createSingleVideoExam(job);
       await createSingleVideoExam(job);
     }
   }
@@ -483,14 +494,20 @@ function getVideoTranscription(
   });
 }
 
-function moveMp4VideosToFoldersWithTheSameName(folder: string) {
+async function moveMp4VideosToFoldersWithTheSameName(folder: string) {
   const TEMP = "tempFolderName";
 
   ensureDirSync(folder);
 
   const files = readdirSync(folder);
 
-  // log("files", files);
+  // const { silentParts, durationInSeconds, audibleParts } = await getSilentParts({
+  //   src: p(folder, files[1]),
+  //   noiseThresholdInDecibels: 0,
+  //   minDurationInSeconds: 1,
+  // });
+
+  // console.log("działa itemInVideoFolder", files[0], { silentParts, durationInSeconds, audibleParts });
 
   files.forEach((itemInVideoFolder) => {
     const isItemADirectory = statSync(p(folder, itemInVideoFolder)).isDirectory();
@@ -534,7 +551,7 @@ async function getInfoFromTranscription(
   transcriptFromDeepgram: TranscriptionFormDeepgram,
   format: "HORIZONTAL" | "VERTICAL"
 ) {
-  const { BASE_FOLDER } = job;
+  const { BASE_DIR, BASE_FOLDER } = job;
   const producedFolder = `${BASE_FOLDER}_PRODUCED`;
 
   const rootVideoDuration = transcriptFromDeepgram?.metadata?.duration;
@@ -619,17 +636,28 @@ async function getInfoFromTranscription(
       );
     }
 
+    // const v1_source = p(BASE_DIR, "_videos", "ebike-ghost", "v1.mp4");
+    // const v1_produced = p(f(producedChunkPath).path, "_v1.mp4");
+    // const v1 = await manipulateVideo(v1_source, v1_produced, 2, 8, { size: "400x300", crop: 0 });
+
+    // const originalVideo1Path = producedChunkPath;
+    // const originalVideo2Path = producedChunkPath;
+    // const producedVideoPath = p(f(producedChunkPath).path, "_a_" + f(producedChunkPath).nameWithExt);
+
+    // log("michal putting video in video here!!", {});
+
+    // await putVideoOnVideo(originalVideo1Path, v1, producedVideoPath);
+
     // VERTICAL VIDEO
     const { path, nameWithExt } = f(producedChunkPath);
     const producedChunkPathVertical = p(path, "V" + nameWithExt);
     if (!existsSync(producedChunkPathVertical) && job.CREATE_VERTICAL_CHUNKS) {
-      await createVideo(
+      createVerticalChunksShorterThan1Min(
         job,
-        originalVideoPath,
+        producedChunkPath,
         producedChunkPathVertical,
         chunkFromVideo.trimStart,
-        chunkFromVideo.trimEnd,
-        "VERTICAL"
+        chunkFromVideo.trimEnd
       );
     }
 
