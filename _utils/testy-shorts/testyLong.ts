@@ -63,15 +63,15 @@ export const createSingleVideoExam = async (job: Job) => {
     const PNG_BG_COLOR = "rgba(2, 6, 23, 0.6)"; // 0.7 is the opacity level (70% opacity)
     const DISABLE_ADDS = false;
 
-    // const scale = 6;
+    // const scale = 5;
     // const WIDTH = 1920 / scale;
     // const HEIGHT = 1080 / scale;
     // const VIDEO_DURATION_LIMIT = 1; // 999999999;
-    // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 12;
-    // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 15;
+    // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
+    // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 2;
     // const GAP = 20;
     // const PNG_BG_COLOR = "rgba(2, 6, 23, 0.6)"; // 0.7 is the opacity level (70% opacity)
-    // const DISABLE_ADDS = true;
+    // const DISABLE_ADDS = false;
 
     const firstExamFromFile = exams[0];
     const { examSlug } = firstExamFromFile;
@@ -93,34 +93,58 @@ export const createSingleVideoExam = async (job: Job) => {
     const mp4_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp4");
     const blankPng = p(BASE_DIR, "_silent_mp3", "blank.png");
 
-    const introAdd1 = p(BASE_DIR, "_silent_mp3", "add1 to jest egzamin na kategorie b.mp4");
-    const introAdd2 = p(BASE_DIR, "_silent_mp3", "add2 to jest egzamin na kategorie b.mp4");
-    const introAdd3 = p(BASE_DIR, "_silent_mp3", "add3 to jest egzamin na kategorie b.mp4");
-    const introAdd4 = p(BASE_DIR, "_silent_mp3", "add4 to jest egzamin na kategorie b.mp4");
-    const introAdd5 = p(BASE_DIR, "_silent_mp3", "add5 to jest egzamin na kategorie b.mp4");
+    // EXAM INTRO VIDEOS
+    const examIntro1 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "egzamin-b-intro-1.mp4");
+    const examIntro2 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "egzamin-b-intro-2.mp4");
+    const examIntro3 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "egzamin-b-intro-3.mp4");
+    const examIntro4 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "egzamin-b-intro-4.mp4");
+    const examIntro1Formatted = await manipulateVideo(examIntro1, pb(`_examIntro1_formatted.mp4`), 0, 9999, { size });
+    const examIntro2Formatted = await manipulateVideo(examIntro2, pb(`_examIntro2_formatted.mp4`), 0, 9999, { size });
+    const examIntro3Formatted = await manipulateVideo(examIntro3, pb(`_examIntro3_formatted.mp4`), 0, 9999, { size });
+    const examIntro4Formatted = await manipulateVideo(examIntro4, pb(`_examIntro4_formatted.mp4`), 0, 9999, { size });
+    const examIntros = [examIntro1Formatted, examIntro2Formatted, examIntro3Formatted, examIntro4Formatted];
+    const randomExamIntro = examIntros[Math.floor(Math.random() * examIntros.length)];
 
-    const introAdd1Formatted = await manipulateVideo(introAdd1, pb(`xxx_add1_formatted.mp4`), 0, 9999, { size });
-    const introAdd2Formatted = await manipulateVideo(introAdd2, pb(`xxx_add2_formatted.mp4`), 0, 9999, { size });
-    const introAdd3Formatted = await manipulateVideo(introAdd3, pb(`xxx_add3_formatted.mp4`), 0, 9999, { size });
-    const introAdd4Formatted = await manipulateVideo(introAdd4, pb(`xxx_add4_formatted.mp4`), 0, 9999, { size });
-    const introAdd5Formatted = await manipulateVideo(introAdd5, pb(`xxx_add5_formatted.mp4`), 0, 9999, { size });
-
-    const randomIntroAdd = [
-      introAdd1Formatted,
-      introAdd2Formatted,
-      introAdd3Formatted,
-      introAdd4Formatted,
-      introAdd5Formatted,
-    ][Math.floor(Math.random() * 5)];
+    // THIS IS EXAM VIDEOS
+    const thisIsExam1 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "to-jest-egzamin-b-1.mp4");
+    const thisIsExam2 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "to-jest-egzamin-b-2.mp4");
+    const thisIsExam3 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "to-jest-egzamin-b-3.mp4");
+    const thisIsExam4 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "to-jest-egzamin-b-4.mp4");
+    const thisIsExam5 = p(BASE_DIR, "_helper_videos", "testy-na-prawo-jazdy", "to-jest-egzamin-b-5.mp4");
+    const thisIsExam1Formatted = await manipulateVideo(thisIsExam1, pb(`_thisIsExam1_formatted.mp4`), 0, 9999, {
+      size,
+    });
+    const thisIsExam2Formatted = await manipulateVideo(thisIsExam2, pb(`_thisIsExam2_formatted.mp4`), 0, 9999, {
+      size,
+    });
+    const thisIsExam3Formatted = await manipulateVideo(thisIsExam3, pb(`_thisIsExam3_formatted.mp4`), 0, 9999, {
+      size,
+    });
+    const thisIsExam4Formatted = await manipulateVideo(thisIsExam4, pb(`_thisIsExam4_formatted.mp4`), 0, 9999, {
+      size,
+    });
+    const thisIsExam5Formatted = await manipulateVideo(thisIsExam5, pb(`_thisIsExam5_formatted.mp4`), 0, 9999, {
+      size,
+    });
+    const thisIsExams = [
+      thisIsExam1Formatted,
+      thisIsExam2Formatted,
+      thisIsExam3Formatted,
+      thisIsExam4Formatted,
+      thisIsExam5Formatted,
+    ];
+    const randomThisIsExam = thisIsExams[Math.floor(Math.random() * thisIsExams.length)];
 
     const zasadyEgzaminu1 = p(BASE_DIR, "_silent_mp3", "zasady egzaminu 1.mp4");
     const zasadyEgzaminu2 = p(BASE_DIR, "_silent_mp3", "zasady egzaminu 2.mp4");
-
-    const zasadyEgzaninuArr = [
-      await manipulateVideo(zasadyEgzaminu1, pb(`xxx_zasady_egzaminu_1_formatted.mp4`), 0, 9999, { size }),
-      // await manipulateVideo(zasadyEgzaminu2, pb(`xxx_zasady_egzaminu_2_formatted.mp4`), 0, 9999, { size }),
-    ];
-
+    const zasadyEgzaminu1Formatted = await manipulateVideo(
+      zasadyEgzaminu1,
+      pb(`_zasady_egzaminu_1_formatted.mp4`),
+      0,
+      9999,
+      { size }
+    );
+    const zasadyEgzaninuArr = [zasadyEgzaminu1Formatted];
     const zasadyEgzaninuRandom = zasadyEgzaninuArr[Math.floor(Math.random() * zasadyEgzaninuArr.length)];
 
     const [logo, logoWidth, logoHeight] = await textToPng("poznaj-testy.pl", pb("poznaj-testy.png"), {
@@ -481,22 +505,27 @@ export const createSingleVideoExam = async (job: Job) => {
 
       const videosToMergeForSingleQuestion = [
         baseVideoWithPngTextAndLogoAndMp3,
-        // lastFrameWidthTextAndAnswersAndLogo_1s,
+        lastFrameWidthTextAndAnswersAndLogo_1s,
         lastFrameWidthTextAndAnswersAndLogo_1s,
         lastFrameWidthTextAndLogoAndAnswer_CorrectAnswer,
-        // lastFrameWidthTextAndAnswersAndLogo_1s_CorrectAnswer,
+        lastFrameWidthTextAndAnswersAndLogo_1s_CorrectAnswer,
         lastFrameWidthTextAndAnswersAndLogo_1s_CorrectAnswer,
       ];
 
-      // After first question add random intro add video
+      // Before 1 question add random intro add video
       if (i === PRODUCED_SHORTS_LIMIT_SLICE_FROM + 1 && !DISABLE_ADDS) {
-        videosToMergeForSingleQuestion.push(randomIntroAdd);
+        videosToMergeForSingleQuestion.unshift(randomExamIntro);
+      }
+
+      // After 3 question add random intro add video
+      if (i === PRODUCED_SHORTS_LIMIT_SLICE_FROM + 3 && !DISABLE_ADDS) {
+        videosToMergeForSingleQuestion.push(randomThisIsExam);
       }
 
       // Afret last question add random zasady egzaminu video
-      if (i === drivingQuestions.length + PRODUCED_SHORTS_LIMIT_SLICE_FROM && !DISABLE_ADDS) {
-        videosToMergeForSingleQuestion.push(zasadyEgzaninuRandom);
-      }
+      // if (i === drivingQuestions.length + PRODUCED_SHORTS_LIMIT_SLICE_FROM && !DISABLE_ADDS) {
+      //   videosToMergeForSingleQuestion.push(zasadyEgzaninuRandom);
+      // }
 
       console.log({ i, length: drivingQuestions.length, PRODUCED_SHORTS_LIMIT_SLICE_FROM });
 
@@ -621,8 +650,8 @@ export const createSingleVideoExam = async (job: Job) => {
 
         const videoToCopy = verticalSingleQuestion;
 
-        copyFileSync(videoToCopy, p(PRODUCED_FOLDER, f(videoToCopy).nameWithExt));
-        copyFileSync(videoToCopy, p(PRODUCED_FOLDER, `${i} ${safeFileName(text)}.mp4`));
+        // copyFileSync(videoToCopy, p(PRODUCED_FOLDER, f(videoToCopy).nameWithExt));
+        // copyFileSync(videoToCopy, p(PRODUCED_FOLDER, `${i} ${safeFileName(text)}.mp4`));
         copyFileSync(videoToCopy, p(PRODUCED_FOLDER, `${safeFileName(text)}.mp4`));
 
         vertical_examVideosPaths.push(verticalSingleQuestion);
@@ -694,29 +723,19 @@ export const createSingleVideoExam = async (job: Job) => {
     const producedExamFolderToCopyTo = p(PRODUCED_FOLDER, `exam_${examNumber}`);
     ensureDirSync(producedExamFolderToCopyTo);
 
-    const examVideoTitle = safeFileName(firstQuestionText);
-    const examVieoCopiedDestination = p(producedExamFolderToCopyTo, `${safeFileName(examVideoTitle)}.mp4`);
+    const safeExamVideoTitle = safeFileName(firstQuestionText);
+    const examVieoCopiedDestination = p(producedExamFolderToCopyTo, `${safeExamVideoTitle}.mp4`);
 
     copyFileSync(producedSingleExamVideo, examVieoCopiedDestination);
     copyFileSync(examDescriptionTxtFile, p(producedExamFolderToCopyTo, `youtube description.txt`));
 
-    const thumbnail1 = await createScreenshot(
-      producedSingleExamVideo,
-      p(producedExamFolderToCopyTo, `${safeFileName(examVideoTitle)}_1.png`),
-      "00:00:05"
-    );
-
-    const thumbnail2 = await createScreenshot(
-      producedSingleExamVideo,
-      p(producedExamFolderToCopyTo, `${safeFileName(examVideoTitle)}_2.png`),
-      "00:00:07"
-    );
-
-    const thumbnail3 = await createScreenshot(
-      producedSingleExamVideo,
-      p(producedExamFolderToCopyTo, `${safeFileName(examVideoTitle)}_3.png`),
-      "00:00:10"
-    );
+    const from = producedSingleExamVideo;
+    const to = producedExamFolderToCopyTo;
+    await createScreenshot(from, p(to, `thumbnail_1.png`), "00:00:10");
+    await createScreenshot(from, p(to, `thumbnail_2.png`), "00:00:13");
+    await createScreenshot(from, p(to, `thumbnail_3.png`), "00:00:15");
+    await createScreenshot(from, p(to, `thumbnail_4.png`), "00:00:18");
+    await createScreenshot(from, p(to, `thumbnail_5.png`), "00:00:22");
   } catch (error) {
     console.error("There is an error in one of media from questions. I will remove all exam from exams-b-random.json");
     writeJsonSync(p(__dirname, "data", "exams-b-random.json"), { exams: exams.slice(1) });

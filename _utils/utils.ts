@@ -75,17 +75,28 @@ export async function createScreenshot(
     const t = timeForScreenshot.replace(/:/g, "_");
     const pngFileName = f(videoPath).name + "_" + t + ".png";
 
-    log(111111, { outputPath, t, pngFileName });
+    log("createScreenshot", { outputPath, t, pngFileName });
+
+    const fullOutputPath = p(outputPath, pngFileName);
+
+    if (existsSync(fullOutputPath)) {
+      resolve(pngFileName);
+      return;
+    }
+
     ffmpeg(videoPath)
       .on("end", function () {
         resolve(pngFileName);
       })
+      .on("error", function (err) {
+        reject(err);
+      })
       .screenshots({
         count: 1,
-        folder: f(outputPath).path,
+        folder: outputPath, // Correctly use outputPath here
         filename: pngFileName, // Output file name pattern with video file name
         size: "1280x720", // Set dimensions to full HD
-        timemarks: [timeForScreenshot], // Take screenshot at 4 second
+        timemarks: [timeForScreenshot], // Take screenshot at specified time
       });
   });
 }

@@ -3,12 +3,7 @@ export type Format = "HORIZONTAL" | "VERTICAL";
 
 export interface Job {
   EXECUTE?: boolean;
-  TYPE?:
-    | "MAKE_HORIZONTAL_VIDEO"
-    | "TRIM_VIDEO_TESTY_YOUTUBE"
-    | "MAKE_SHORTS_WITH_DRIVING_QUESTIONS"
-    | "MAKE_LONG_WITH_DRIVING_QUESTIONS"
-    | "MERGE_VIDEOS";
+  TYPE?: "MAKE_HORIZONTAL_VIDEO" | "TRIM_VIDEO_TESTY_YOUTUBE" | "MAKE_LONG_WITH_DRIVING_QUESTIONS" | "MERGE_VIDEOS";
   ORIENTATION: "HORIZONTAL" | "VERTICAL";
   DEEPGRAM_LANG: "en" | "pl";
   TRIM_EALIER: number;
@@ -19,6 +14,7 @@ export interface Job {
   BASE_FOLDER: string;
   PRODUCED_FOLDER?: string; // remove this
   FLIP_CHUNK?: boolean;
+  ZOOM_IN_INSIDE_CHUNK?: boolean;
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER?: boolean;
   CREATE_VERTICAL_CHUNKS?: boolean;
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS?: boolean;
@@ -37,6 +33,7 @@ export interface ManipulateVideoOptions {
   blur?: number; // 10
   scale?: number;
   crop?: number;
+  cropTopRight?: number;
   volume?: number;
 }
 

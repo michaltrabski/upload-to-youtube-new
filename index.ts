@@ -44,7 +44,7 @@ import { mergeTranscriptFromAllChunksFromAllVideos } from "./_utils/transcript";
 import { videoInVideo } from "./_utils/videoInVideo";
 
 import { ALL_JOBS } from "./_allJobs";
-import { createTestyShorts } from "./_utils/testy-shorts/testyShorts";
+
 import { createSingleVideoExam } from "./_utils/testy-shorts/testyLong";
 
 require("dotenv").config();
@@ -87,10 +87,6 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
       await trimVideoFromFolder(job, job.BASE_FOLDER, "video.mp4", 7.2);
     }
 
-    if (TYPE === "MAKE_SHORTS_WITH_DRIVING_QUESTIONS") {
-      await createTestyShorts(job);
-    }
-
     if (TYPE === "MERGE_VIDEOS") {
       const folder = job.BASE_FOLDER;
       ensureDirSync(folder);
@@ -111,9 +107,9 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
       const mergedVideoPath = p(folder, "merged.mp4");
       await mergeVideos(videos, mergedVideoPath);
 
-      const thumbnail1 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_1.png`), "00:04:11");
-      const thumbnail2 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_2.png`), "00:08:22");
-      const thumbnail3 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_3.png`), "00:12:33");
+      // const thumbnail1 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_1.png`), "00:04:11");
+      // const thumbnail2 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_2.png`), "00:08:22");
+      // const thumbnail3 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_3.png`), "00:12:33");
 
       const duration = await getVideoDuration(mergedVideoPath);
       log("duration", duration);
@@ -126,16 +122,6 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
     }
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
       await createSingleVideoExam(job);
     }
   }
@@ -174,17 +160,34 @@ async function mergeAllChunksFromAllVideos(job: Job, videos: VideoChunk[]) {
   const producedVideoPath = p(folderToCopy, `merged_horizontal.mp4`);
   await mergeVideos(allChunksFromEveryVideo, producedVideoPath);
 
-  const pointsInTime = [
-    "00:00:01",
-    "00:00:03",
-    "00:00:05",
-    "00:00:07",
-    "00:00:10",
-    "00:00:15",
-    "00:00:20",
-    "00:00:30",
-    "00:00:45",
+  const loopme = [
+    "00:01:00",
+    "00:02:00",
+    "00:03:00",
+    "00:04:00",
+    "00:05:00",
+    "00:06:00",
+    "00:07:00",
+    "00:08:00",
+    "00:09:00",
+    "00:10:00",
+    "00:11:00",
+    "00:12:00",
+    "00:13:00",
+    "00:14:00",
+    "00:15:00",
+    "00:16:00",
+    "00:17:00",
+    "00:18:00",
+    "00:19:00",
+    "00:20:00",
   ];
+
+  const pointsInTime = [
+    ...[...Array(10)].map((_, i) => `00:0${i}:00`),
+    ...[...Array(10)].map((_, i) => `00:${10 + i}:00`),
+  ];
+
   for (const pointInTime of pointsInTime) {
     await createScreenshot(producedVideoPath, f(producedVideoPath).path, pointInTime);
   }
@@ -635,6 +638,16 @@ async function getInfoFromTranscription(
         format
       );
     }
+
+    // CREATE ZOOM IN INSIDE CHUNK
+    const zoomInChunkPath = p(f(producedChunkPath).path, "zoomIn_" + f(producedChunkPath).nameWithExt);
+    if (!existsSync(zoomInChunkPath) && job.ZOOM_IN_INSIDE_CHUNK) {
+      // await createVideo(job, producedChunkPath, zoomInChunkPath, 0, 3, format);
+
+      await manipulateVideo(producedChunkPath, zoomInChunkPath, 0, 3, { cropTopRight: 30 });
+    }
+
+    console.log("michal", { producedChunkPath, ZOOM_IN_INSIDE_CHUNK: job.ZOOM_IN_INSIDE_CHUNK });
 
     // const v1_source = p(BASE_DIR, "_videos", "ebike-ghost", "v1.mp4");
     // const v1_produced = p(f(producedChunkPath).path, "_v1.mp4");

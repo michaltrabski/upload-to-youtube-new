@@ -20,7 +20,8 @@ export const askChatGpt = async (question: string) => {
 
   const chatCompletion = await openai.chat.completions.create({
     messages: [message],
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
+    // model: "gpt-3.5-turbo",
     // model: "gpt-4",
     // model: "gpt-4-turbo-preview",
   });

@@ -274,17 +274,49 @@ export async function manipulateVideo(
         const originalWidth = videoStream?.width;
         const originalHeight = videoStream?.height;
 
-        const cropWidth = (originalWidth || 0) * (1 - cropBy); // 60% of original width
-        const cropHeight = (originalHeight || 0) * (1 - cropBy); //60% of original height
-        const x = (originalWidth || 0) * (cropBy / 2); // 30% of original width
-        const y = (originalHeight || 0) * (cropBy / 2); // 30% of original height
+        const cropWidth = (originalWidth || 0) * (1 - cropBy);
+        const cropHeight = (originalHeight || 0) * (1 - cropBy);
+        const x = (originalWidth || 0) * (cropBy / 2);
+        const y = (originalHeight || 0) * (cropBy / 2);
 
         command.videoFilters(`crop=${cropWidth}:${cropHeight}:${x}:${y}`);
 
         command
           .output(producedVideoPathTemp)
           // .size(options.size)
-          .fps(29.97)
+          // .fps(29.97)
+          .on("end", () => {
+            renameSync(producedVideoPathTemp, producedVideoPath);
+            resolve(producedVideoPath);
+          })
+          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          .on("error", (err: any) => reject(err))
+          .run();
+      });
+    } else if (options.cropTopRight && options.cropTopRight > 0) {
+      ffmpeg.ffprobe(originalVideoPath, function (err, metadata) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        const cropBy = (options.cropTopRight || 1) / 100;
+
+        const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
+        const originalWidth = videoStream?.width;
+        const originalHeight = videoStream?.height;
+
+        const cropWidth = (originalWidth || 0) * (1 - cropBy);
+        const cropHeight = (originalHeight || 0) * (1 - cropBy);
+        const x = (originalWidth || 0) * cropBy; // Crop from the right
+        const y = 0; // Crop from the top
+
+        command.videoFilters(`crop=${cropWidth}:${cropHeight}:${x}:${y}`);
+
+        command
+          .output(producedVideoPathTemp)
+          // .size(options.size)
+          // .fps(29.97)
           .on("end", () => {
             renameSync(producedVideoPathTemp, producedVideoPath);
             resolve(producedVideoPath);
@@ -297,7 +329,7 @@ export async function manipulateVideo(
       command
         .output(producedVideoPathTemp)
         // .size(options.size)
-        .fps(29.97)
+        // .fps(29.97)
         .on("end", () => {
           renameSync(producedVideoPathTemp, producedVideoPath);
           resolve(producedVideoPath);
