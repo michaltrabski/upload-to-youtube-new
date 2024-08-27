@@ -239,7 +239,7 @@ export async function manipulateVideo(
       .setDuration(originalVideoTrimTo - originalVideoTrimFrom);
 
     if (options.size) {
-      command.size(options.size);
+      command.size(options.size); // "1920x1080"
     }
 
     if (options.blur) {
@@ -269,6 +269,7 @@ export async function manipulateVideo(
         }
 
         const cropBy = (options.crop || 1) / 100;
+        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -301,6 +302,7 @@ export async function manipulateVideo(
         }
 
         const cropBy = (options.cropTopRight || 1) / 100;
+        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;

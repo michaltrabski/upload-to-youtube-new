@@ -216,8 +216,8 @@ const jazdaPoStrefieEgzaminacyjnejHorizontalVideo: Job = {
   FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
   ZOOM_IN_INSIDE_CHUNK: false,
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: false,
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
+  CREATE_VERTICAL_CHUNKS: true,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 

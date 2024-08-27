@@ -46,6 +46,7 @@ import { videoInVideo } from "./_utils/videoInVideo";
 import { ALL_JOBS } from "./_allJobs";
 
 import { createSingleVideoExam } from "./_utils/testy-shorts/testyLong";
+import { drawTextOnVideo, getVideoDimensions } from "./_utils/ffmpeg-v2";
 
 require("dotenv").config();
 
@@ -639,33 +640,20 @@ async function getInfoFromTranscription(
       );
     }
 
-    // CREATE ZOOM IN INSIDE CHUNK
-    const zoomInChunkPath = p(f(producedChunkPath).path, "zoomIn_" + f(producedChunkPath).nameWithExt);
-    if (!existsSync(zoomInChunkPath) && job.ZOOM_IN_INSIDE_CHUNK) {
-      // await createVideo(job, producedChunkPath, zoomInChunkPath, 0, 3, format);
+    // // CREATE ZOOM IN INSIDE CHUNK
+    // const zoomInChunkPath = p(f(producedChunkPath).path, "zoomIn_" + f(producedChunkPath).nameWithExt);
+    // if (!existsSync(zoomInChunkPath) && job.ZOOM_IN_INSIDE_CHUNK) {
+    //   // await createVideo(job, producedChunkPath, zoomInChunkPath, 0, 3, format);
 
-      await manipulateVideo(producedChunkPath, zoomInChunkPath, 0, 3, { cropTopRight: 30 });
-    }
+    //   await manipulateVideo(producedChunkPath, zoomInChunkPath, 0, 3, { cropTopRight: 30 });
+    // }
 
-    console.log("michal", { producedChunkPath, ZOOM_IN_INSIDE_CHUNK: job.ZOOM_IN_INSIDE_CHUNK });
-
-    // const v1_source = p(BASE_DIR, "_videos", "ebike-ghost", "v1.mp4");
-    // const v1_produced = p(f(producedChunkPath).path, "_v1.mp4");
-    // const v1 = await manipulateVideo(v1_source, v1_produced, 2, 8, { size: "400x300", crop: 0 });
-
-    // const originalVideo1Path = producedChunkPath;
-    // const originalVideo2Path = producedChunkPath;
-    // const producedVideoPath = p(f(producedChunkPath).path, "_a_" + f(producedChunkPath).nameWithExt);
-
-    // log("michal putting video in video here!!", {});
-
-    // await putVideoOnVideo(originalVideo1Path, v1, producedVideoPath);
+    // console.log("michal", { producedChunkPath, ZOOM_IN_INSIDE_CHUNK: job.ZOOM_IN_INSIDE_CHUNK });
 
     // VERTICAL VIDEO
-    const { path, nameWithExt } = f(producedChunkPath);
-    const producedChunkPathVertical = p(path, "V" + nameWithExt);
+    const producedChunkPathVertical = p(f(producedChunkPath).path, "V" + f(producedChunkPath).nameWithExt);
     if (!existsSync(producedChunkPathVertical) && job.CREATE_VERTICAL_CHUNKS) {
-      createVerticalChunksShorterThan1Min(
+      await createVerticalChunksShorterThan1Min(
         job,
         producedChunkPath,
         producedChunkPathVertical,

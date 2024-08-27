@@ -40,7 +40,7 @@ export async function mergeTranscriptFromAllChunksFromAllVideos(job: Job, videos
 
   const oCzymMowieWFilmie = `
       Napisz o czym mówię w filmie na podstawie tekstu.
-      Wypowiedź zacznij od: "Cześć. W tym filmie wideo omawiam"
+      Wypowiedź zacznij od: "Cześć. W tym filmie wideo"
       ${timestampsAsText}
       `;
 
@@ -50,6 +50,7 @@ export async function mergeTranscriptFromAllChunksFromAllVideos(job: Job, videos
       Napisz podsumowanie filmu, które będzie umieszczone na YouTube na podstawie tekstu:
       ${timestampsAsText}
       `;
+
 
   const podsumowanieFilmu = await askChatGpt(pytanieOpodsumowanieFilmu);
 
