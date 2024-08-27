@@ -13,7 +13,11 @@ const PREVENT_OVERRIDE = true;
 const LOG = true;
 
 function log(...args: any[]) {
-  if (LOG) console.log(...args);
+  if (LOG) {
+    console.log();
+    console.log(...args);
+  }
+  console.log();
 }
 
 export async function manipulateVideo_v2(
@@ -25,19 +29,13 @@ export async function manipulateVideo_v2(
   return new Promise((resolve, reject) => {
     const prefix = md5(
       JSON.stringify({ originalVideoPath, originalVideoTrimFrom, originalVideoTrimTo, options })
-    ).slice(0, 8);
-    const producedVideoPath = p(f(originalVideoPath).path, `x__rob_${prefix}_${f(originalVideoPath).name}.mp4`);
+    ).slice(0, 10);
+    const producedVideoPath = p(f(originalVideoPath).path, `${f(originalVideoPath).name}_${prefix}.mp4`);
 
-    log("manipulateVideo_v2() called");
-    log("from video", originalVideoPath);
-    log("to video", producedVideoPath);
-
-    if (PREVENT_OVERRIDE) {
-      if (existsSync(producedVideoPath)) {
-        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-        resolve(producedVideoPath);
-        return;
-      }
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
     }
 
     const rnd = Math.floor(Math.random() * 999999) + 1;
@@ -47,11 +45,7 @@ export async function manipulateVideo_v2(
     const from = originalVideoTrimFrom;
     const to = originalVideoTrimTo;
 
-    const { name, ext, path } = f(producedVideoPath);
-
-    log(`\n   createVideo() called - creating video: ${path}`);
-    log(`   ${name}${ext}`);
-    log(`   (Approx produced video duration is ${Math.floor(to - from)} seconds)`);
+    log("manipulateVideo_v2", producedVideoPath, `produced video duration will be ${Math.floor(to - from)} seconds`);
 
     const command = ffmpeg()
       .input(originalVideoPath)
@@ -110,7 +104,11 @@ export async function manipulateVideo_v2(
             renameSync(producedVideoPathTemp, producedVideoPath);
             resolve(producedVideoPath);
           })
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          .on("progress", (p: any) => {
+            if (Math.floor(p.percent) % 10 === 0) {
+              console.log(`progress: ${Math.floor(p.percent)}%`);
+            }
+          })
           .on("error", (err: any) => reject(err))
           .run();
       });
@@ -143,7 +141,11 @@ export async function manipulateVideo_v2(
             renameSync(producedVideoPathTemp, producedVideoPath);
             resolve(producedVideoPath);
           })
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          .on("progress", (p: any) => {
+            if (Math.floor(p.percent) % 10 === 0) {
+              console.log(`progress: ${Math.floor(p.percent)}%`);
+            }
+          })
           .on("error", (err: any) => reject(err))
           .run();
       });
@@ -156,7 +158,11 @@ export async function manipulateVideo_v2(
           renameSync(producedVideoPathTemp, producedVideoPath);
           resolve(producedVideoPath);
         })
-        .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+        .on("progress", (p: any) => {
+          if (Math.floor(p.percent) % 10 === 0) {
+            console.log(`progress: ${Math.floor(p.percent)}%`);
+          }
+        })
         .on("error", (err: any) => reject(err))
         .run();
     }
@@ -165,15 +171,16 @@ export async function manipulateVideo_v2(
 
 export function putVideoOnVideo_v2(originalVideo1Path: string, originalVideo2Path: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const prefix = md5(JSON.stringify({ originalVideo1Path, originalVideo2Path })).slice(0, 8);
-    const producedVideoPath = p(f(originalVideo1Path).path, `x__rob_${prefix}_${f(originalVideo1Path).name}.mp4`);
-    if (PREVENT_OVERRIDE) {
-      if (existsSync(producedVideoPath)) {
-        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-        resolve(producedVideoPath);
-        return;
-      }
+    const prefix = md5(JSON.stringify({ originalVideo1Path, originalVideo2Path })).slice(0, 10);
+    const producedVideoPath = p(f(originalVideo1Path).path, `${f(originalVideo1Path).name}_${prefix}.mp4`);
+
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
     }
+
+    log("putVideoOnVideo_v2", producedVideoPath);
 
     ffmpeg.ffprobe(originalVideo1Path, function (err, metadata1) {
       if (err) {
@@ -201,14 +208,19 @@ export function putVideoOnVideo_v2(originalVideo1Path: string, originalVideo2Pat
         ffmpeg()
           .input(originalVideo1Path)
           .input(originalVideo2Path)
-          .fps(29.97)
+          // .fps(29.97)
           .complexFilter([
-            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,0,20)'`,
+            // `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,0,20)'`,
+            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3'`,
             // `[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,20)'`,
             // "[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", // this line produce error because of audio in videos
           ])
           .output(producedVideoPathTemp)
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          .on("progress", (p: any) => {
+            if (Math.floor(p.percent) % 10 === 0) {
+              console.log(`progress: ${Math.floor(p.percent)}%`);
+            }
+          })
           .on("error", (err: any) => reject(err))
           .on("end", () => {
             renameSync(producedVideoPathTemp, producedVideoPath);
@@ -234,15 +246,13 @@ interface TextOptions {
 
 export function drawTextOnVideo(originalVideoPath: string, text: string, options: TextOptions): Promise<string> {
   return new Promise((resolve, reject) => {
-    const prefix = md5(JSON.stringify({ originalVideoPath, text, options })).slice(0, 8);
-    const producedVideoPath = p(f(originalVideoPath).path, `x__rob_${prefix}_${f(originalVideoPath).name}.mp4`);
+    const prefix = md5(JSON.stringify({ originalVideoPath, text, options })).slice(0, 10);
+    const producedVideoPath = p(f(originalVideoPath).path, `${f(originalVideoPath).name}_${prefix}.mp4`);
 
-    if (PREVENT_OVERRIDE) {
-      if (existsSync(producedVideoPath)) {
-        log(`\n drawTextOnVideo() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-        resolve(producedVideoPath);
-        return;
-      }
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
     }
 
     const rnd = Math.floor(Math.random() * 999999) + 1;
@@ -261,11 +271,17 @@ export function drawTextOnVideo(originalVideoPath: string, text: string, options
       encoding ? `:encoding=${encoding}` : ""
     }`;
 
+    log("drawTextOnVideo", producedVideoPath);
+
     ffmpeg()
       .input(originalVideoPath)
       .videoFilters(filterOptions)
       .output(producedVideoPathTemp)
-      .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+      .on("progress", (p: any) => {
+        if (Math.floor(p.percent) % 10 === 0) {
+          console.log(`progress: ${Math.floor(p.percent)}%`);
+        }
+      })
       .on("error", (err: any) => reject(err))
       .on("end", () => {
         renameSync(producedVideoPathTemp, producedVideoPath);
@@ -310,15 +326,13 @@ export function createVideo_v2(
   return new Promise((resolve, reject) => {
     const prefix = md5(
       JSON.stringify({ job, originalVideoPath, originalVideoTrimFrom, originalVideoTrimTo, format })
-    ).slice(0, 8);
-    const producedVideoPath = p(f(originalVideoPath).path, `x__rob_${prefix}_${f(originalVideoPath).name}.mp4`);
+    ).slice(0, 10);
+    const producedVideoPath = p(f(originalVideoPath).path, `${f(originalVideoPath).name}_${prefix}.mp4`);
 
-    if (PREVENT_OVERRIDE) {
-      if (existsSync(producedVideoPath)) {
-        log(`makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
-        resolve(producedVideoPath);
-        return;
-      }
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
     }
 
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
@@ -328,11 +342,7 @@ export function createVideo_v2(
     const from = originalVideoTrimFrom;
     const to = originalVideoTrimTo;
 
-    const { name, ext, path } = f(producedVideoPath);
-
-    log(`\ncreateVideo() called - creating video: ${path}`);
-    log(`   ${name}${ext}`);
-    log(`   (Approx produced video duration is ${Math.floor(to - from)} seconds)`);
+    log("createVideo_v2", producedVideoPath, `produced video duration will be ${Math.floor(to - from)} seconds`);
 
     let newFlip: any = [];
 
@@ -352,13 +362,10 @@ export function createVideo_v2(
           renameSync(producedVideoPathTemp, producedVideoPath);
           resolve(producedVideoPath);
         })
-        .on("progress", (progress: any) => {
-          const newPercent = Math.floor(progress.percent);
-
-          if (newPercent > percent || newPercent === 0) {
-            log(`   progress: ${newPercent}%`);
+        .on("progress", (p: any) => {
+          if (Math.floor(p.percent) % 10 === 0) {
+            console.log(`progress: ${Math.floor(p.percent)}%`);
           }
-          percent = newPercent;
         })
         .on("error", (err: any) => reject(err))
         // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
@@ -383,16 +390,13 @@ export function createVideo_v2(
           renameSync(producedVideoPathTemp, producedVideoPath);
           resolve(producedVideoPath);
         })
-        .on("progress", (progress: any) => {
-          const newPercent = Math.floor(progress.percent);
-
-          if (newPercent > percent || newPercent === 0) {
-            log(`   progress: ${newPercent}%`);
+        .on("progress", (p: any) => {
+          if (Math.floor(p.percent) % 10 === 0) {
+            console.log(`progress: ${Math.floor(p.percent)}%`);
           }
-          percent = newPercent;
         })
         .on("error", (err: any) => reject(err))
-        .fps(29.97)
+        // .fps(29.97)
         // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
         // .videoCodec("libx264")
         // .videoBitrate(1000)

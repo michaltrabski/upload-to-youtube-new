@@ -640,19 +640,10 @@ async function getInfoFromTranscription(
       );
     }
 
-    // // CREATE ZOOM IN INSIDE CHUNK
-    // const zoomInChunkPath = p(f(producedChunkPath).path, "zoomIn_" + f(producedChunkPath).nameWithExt);
-    // if (!existsSync(zoomInChunkPath) && job.ZOOM_IN_INSIDE_CHUNK) {
-    //   // await createVideo(job, producedChunkPath, zoomInChunkPath, 0, 3, format);
-
-    //   await manipulateVideo(producedChunkPath, zoomInChunkPath, 0, 3, { cropTopRight: 30 });
-    // }
-
-    // console.log("michal", { producedChunkPath, ZOOM_IN_INSIDE_CHUNK: job.ZOOM_IN_INSIDE_CHUNK });
-
+ 
     // VERTICAL VIDEO
     const producedChunkPathVertical = p(f(producedChunkPath).path, "V" + f(producedChunkPath).nameWithExt);
-    if (!existsSync(producedChunkPathVertical) && job.CREATE_VERTICAL_CHUNKS) {
+    if (job.CREATE_VERTICAL_CHUNKS) {
       await createVerticalChunksShorterThan1Min(
         job,
         producedChunkPath,

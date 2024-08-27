@@ -40,11 +40,7 @@ export function createVideo(
     const from = originalVideoTrimFrom;
     const to = originalVideoTrimTo;
 
-    const { name, ext, path } = f(producedVideoPath);
-
-    log(`\ncreateVideo() called - creating video: ${path}`);
-    log(`   ${name}${ext}`);
-    log(`   (Approx produced video duration is ${Math.floor(to - from)} seconds)`);
+    log("createVideo", producedVideoPath, `produced video duration will be ${Math.floor(to - from)} seconds`);
 
     let newFlip: any = [];
 
