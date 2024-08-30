@@ -20,7 +20,7 @@ import { ChunkFromVideo, TranscriptionFormDeepgram, VideoChunk } from "./types";
 import {
   createHtmlPreview,
   createScreenshot,
-  createVerticalChunksShorterThan1Min,
+  createVerticalChunksWithDurationLimit,
   f,
   getEnv,
   log,
@@ -46,7 +46,7 @@ import { videoInVideo } from "./_utils/videoInVideo";
 import { ALL_JOBS } from "./_allJobs";
 
 import { createSingleVideoExam } from "./_utils/testy-shorts/testyLong";
-import { drawTextOnVideo, getVideoDimensions } from "./_utils/ffmpeg-v2";
+import { drawTextOnVideo, getVideoDimensions, mergeVideos_v2 } from "./_utils/ffmpeg-v2";
 
 require("dotenv").config();
 
@@ -108,10 +108,6 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
       const mergedVideoPath = p(folder, "merged.mp4");
       await mergeVideos(videos, mergedVideoPath);
 
-      // const thumbnail1 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_1.png`), "00:04:11");
-      // const thumbnail2 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_2.png`), "00:08:22");
-      // const thumbnail3 = createScreenshot(mergedVideoPath, p(f(mergedVideoPath).path, `thumbnail_3.png`), "00:12:33");
-
       const duration = await getVideoDuration(mergedVideoPath);
       log("duration", duration);
 
@@ -159,34 +155,11 @@ async function mergeAllChunksFromAllVideos(job: Job, videos: VideoChunk[]) {
   // await mergeVideos(allChunksFromEveryVideo, p(folderToCopy, `merged_${random}.mp4`));
 
   const producedVideoPath = p(folderToCopy, `merged_horizontal.mp4`);
-  await mergeVideos(allChunksFromEveryVideo, producedVideoPath);
-
-  const loopme = [
-    "00:01:00",
-    "00:02:00",
-    "00:03:00",
-    "00:04:00",
-    "00:05:00",
-    "00:06:00",
-    "00:07:00",
-    "00:08:00",
-    "00:09:00",
-    "00:10:00",
-    "00:11:00",
-    "00:12:00",
-    "00:13:00",
-    "00:14:00",
-    "00:15:00",
-    "00:16:00",
-    "00:17:00",
-    "00:18:00",
-    "00:19:00",
-    "00:20:00",
-  ];
+  await mergeVideos_v2(allChunksFromEveryVideo, producedVideoPath);
 
   const pointsInTime = [
-    ...[...Array(10)].map((_, i) => `00:0${i}:00`),
-    ...[...Array(10)].map((_, i) => `00:${10 + i}:00`),
+    ...[...Array(10)].map((_, i) => `00:0${i}:00`), // 00:00:00 - 00:09:00
+    ...[...Array(10)].map((_, i) => `00:${10 + i}:00`), // 00:10:00 - 00:19:00
   ];
 
   for (const pointInTime of pointsInTime) {
@@ -418,6 +391,23 @@ async function createAllVideosData(settings: Job) {
       continue;
     }
 
+    if (originalVideo.includes("thumbnail")) {
+      const videoPath = p(folderPath, originalVideo);
+      const duration = await getVideoDuration(videoPath);
+      const pointsInTime = [
+        ...[...Array(10)].map((_, i) => `00:00:0${i}`),
+        ...[...Array(30)].map((_, i) => `00:00:${10 + i}`),
+      ];
+
+      for (const pointInTime of pointsInTime) {
+        // await
+        createScreenshot(videoPath, f(videoPath).path, pointInTime);
+      }
+
+      log("skipping thumbnail", { originalVideo });
+      throw new Error("thumbnail");
+    }
+
     const originalVideoPath = path.join(folderPath, originalVideo);
 
     const transcriptionFormDeepgram = await getVideoTranscription(settings, folderPath, originalVideoPath);
@@ -555,8 +545,7 @@ async function getInfoFromTranscription(
   transcriptFromDeepgram: TranscriptionFormDeepgram,
   format: "HORIZONTAL" | "VERTICAL"
 ) {
-  const { BASE_DIR, BASE_FOLDER } = job;
-  const producedFolder = `${BASE_FOLDER}_PRODUCED`;
+  const { BASE_FOLDER } = job;
 
   const rootVideoDuration = transcriptFromDeepgram?.metadata?.duration;
   const transcript = transcriptFromDeepgram?.results?.channels[0]?.alternatives[0]?.transcript;
@@ -640,24 +629,11 @@ async function getInfoFromTranscription(
       );
     }
 
- 
     // VERTICAL VIDEO
     const producedChunkPathVertical = p(f(producedChunkPath).path, "V" + f(producedChunkPath).nameWithExt);
     if (job.CREATE_VERTICAL_CHUNKS) {
-      await createVerticalChunksShorterThan1Min(
-        job,
-        producedChunkPath,
-        producedChunkPathVertical,
-        chunkFromVideo.trimStart,
-        chunkFromVideo.trimEnd
-      );
-    }
-
-    if (existsSync(producedChunkPathVertical)) {
-      const { nameWithExt } = f(producedChunkPathVertical);
-      ensureDirSync(p(producedFolder));
-      const name = nameWithExt.split(" ").splice(1).join(" ");
-      copyFileSync(producedChunkPathVertical, p(producedFolder, name));
+      // you can await or go on
+      createVerticalChunksWithDurationLimit(job, producedChunkPath, producedChunkPathVertical, 35); // await
     }
   }
 
@@ -682,17 +658,8 @@ async function getInfoFromTranscription(
       log("merging chunks:");
       log(video.selectedChunksFromVideoToProduceMergedVideo);
 
-      await mergeVideos(video.selectedChunksFromVideoToProduceMergedVideo, video.path);
+      await mergeVideos_v2(video.selectedChunksFromVideoToProduceMergedVideo, video.path);
     }
-
-    // michal
-    // const screenshotPath = await createScreenshot(video.path, p(__dirname, BASE_FOLDER, folderName));
-    // createdVideosData[format].push({
-    //   videoPath: video.path,
-    //   videoName: video.path.split("\\").pop() as string,
-    //   screenshotPath: screenshotPath as string,
-    //   screenshotName: (screenshotPath as string).split("\\").pop() as string,
-    // });
   }
 
   return videosToUpload;

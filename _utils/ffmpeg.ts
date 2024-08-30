@@ -100,7 +100,7 @@ export function createVideo(
           percent = newPercent;
         })
         .on("error", (err: any) => reject(err))
-        .fps(29.97)
+        // .fps(29.97)
         // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
         // .videoCodec("libx264")
         // .videoBitrate(1000)

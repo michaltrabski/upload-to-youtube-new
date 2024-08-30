@@ -311,138 +311,71 @@ export const textToPng = async (
   return [procucedFileLocation, width, height];
 };
 
-export const createVerticalChunksShorterThan1Min = async (
+export const createVerticalChunksWithDurationLimit = async (
   job: Job,
   originalVideoPath: string,
   producedChunkPathVertical: string,
-  trimStart: number,
-  trimEnd: number
+  maxShortDuration: number
 ) => {
   const textOptions = {
     // fontfile: "path/to/font.ttf",
     fontsize: 80,
     fontcolor: "red",
     x: "(main_w/2-text_w/2)",
-    y: "1000",
+    y: "1250",
     shadowcolor: "black",
     shadowx: 2,
     shadowy: 2,
     // encoding: "utf8",
   };
 
+  const textFilter = {
+    filter: "drawtext",
+    options: {
+      // fontfile: "/path/to/font.ttf", // Specify the path to the font file
+      text: "Parkowanie Samochodu", // Text to be drawn "Strefa egzaminacyjna"
+      fontsize: 80, // Font size
+      fontcolor: "red", // Font color
+      x: "(main_w/2-text_w/2)", // X position (centered)
+      y: "1250", // Y position from the top
+      box: 0, // Enable box around text
+      boxcolor: "black@0.5", // Box color with transparency
+      boxborderw: 0, // Box border width
+      shadowcolor: "black",
+      shadowx: 2,
+      shadowy: 2,
+    },
+  };
+
   const { w, h } = await getVideoDimensions(originalVideoPath);
-  const smallSize = { size: `${Math.floor(w / 3.1)}x${Math.floor(h / 3.1)}` };
+  const ytRecomendedWidth = 1080;
+  const relativeHeight = (ytRecomendedWidth * h) / w;
+
+  const smallSize = { size: `${ytRecomendedWidth}x${relativeHeight}` };
+  const bigSize = { size: `${Math.round(1920 * (16 / 9))}x1920` };
   log("getVideoDimensions", { w, h, smallSize });
 
   const horizontalBaseChunk = originalVideoPath;
   const duration = await getVideoDuration(horizontalBaseChunk);
   console.log("createVerticalChunksShorterThan1Min() =>", { duration });
 
-  const DURATION_LIMIT = 60;
-  const MAX = 60 * 60;
+  const shortsPerChunk = Math.floor(duration / maxShortDuration) || 1;
 
-  if (duration < DURATION_LIMIT || !duration) {
-    log(111111111, "Duration is less than 1 min", { duration });
-    const _1a = await manipulateVideo_v2(horizontalBaseChunk, 0, MAX, { blur: 7 });
-    const _2a = await manipulateVideo_v2(horizontalBaseChunk, 0, MAX, { ...smallSize });
-    const _3a = await putVideoOnVideo_v2(_1a, _2a);
-    const _4a = await createVideo_v2(job, _3a, 0, MAX, "VERTICAL");
-    const _5a = await drawTextOnVideo(_4a, "Strefa egzaminacyjna", textOptions);
-    const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_a.mp4");
-    fs.copySync(_5a, final_a);
+  log(111111111, { duration, shortsPerChunk });
+
+  for (let i = 0; i < shortsPerChunk; i++) {
+    const maxDuration = shortsPerChunk === 1 ? duration : maxShortDuration;
+
+    log(222222222, { i, maxDuration });
+    const [_1a, _2a] = await Promise.all([
+      manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...smallSize }),
+      manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...bigSize, blur: 7 }),
+    ]);
+
+    const _3a = await putVideoOnVideo_v2(_2a, _1a);
+    const _4a = await createVideo_v2(job, _3a, 0, 99999999, "VERTICAL", textFilter);
+    const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + `_${i}.mp4`);
+    fs.copySync(_4a, final_a);
     fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
-  }
-
-  if (duration >= DURATION_LIMIT && duration < DURATION_LIMIT * 2) {
-    log(222222222, "Duration is more than 1 min and less than 2 min", { duration });
-    const dur = Math.floor(duration / 2);
-    const _1a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { blur: 7 });
-    const _2a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { ...smallSize });
-    const _3a = await putVideoOnVideo_v2(_1a, _2a);
-    const _4a = await createVideo_v2(job, _3a, 0, MAX, "VERTICAL");
-    const _5a = await drawTextOnVideo(_4a, "Strefa egzaminacyjna", textOptions);
-    const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_a.mp4");
-    fs.copySync(_5a, final_a);
-    fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
-
-    const _1b = await manipulateVideo_v2(horizontalBaseChunk, dur, MAX, { blur: 7 });
-    const _2b = await manipulateVideo_v2(horizontalBaseChunk, dur, MAX, { ...smallSize });
-    const _3b = await putVideoOnVideo_v2(_1b, _2b);
-    const _4b = await createVideo_v2(job, _3b, 0, MAX, "VERTICAL");
-    const _5b = await drawTextOnVideo(_4b, "Strefa egzaminacyjna", textOptions);
-    const final_b = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_b.mp4");
-    fs.copySync(_5b, final_b);
-    fs.copySync(final_b, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_b).nameWithExt));
-  }
-
-  if (duration >= 2 * DURATION_LIMIT && duration < DURATION_LIMIT * 3) {
-    log(333333333, "Duration is more than 2 min and less than 3 min", { duration });
-    const dur = Math.floor(duration / 3);
-    const _1a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { blur: 7 });
-    const _2a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { ...smallSize });
-    const _3a = await putVideoOnVideo_v2(_1a, _2a);
-    const _4a = await createVideo_v2(job, _3a, 0, MAX, "VERTICAL");
-    const _5a = await drawTextOnVideo(_4a, "Strefa egzaminacyjna", textOptions);
-    const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_a.mp4");
-    fs.copySync(_5a, final_a);
-    fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
-
-    const _1b = await manipulateVideo_v2(horizontalBaseChunk, dur, dur * 2, { blur: 7 });
-    const _2b = await manipulateVideo_v2(horizontalBaseChunk, dur, dur * 2, { ...smallSize });
-    const _3b = await putVideoOnVideo_v2(_1b, _2b);
-    const _4b = await createVideo_v2(job, _3b, 0, MAX, "VERTICAL");
-    const _5b = await drawTextOnVideo(_4b, "Strefa egzaminacyjna", textOptions);
-    const final_b = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_b.mp4");
-    fs.copySync(_5b, final_b);
-    fs.copySync(final_b, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_b).nameWithExt));
-
-    const _1c = await manipulateVideo_v2(horizontalBaseChunk, dur * 2, MAX, { blur: 7 });
-    const _2c = await manipulateVideo_v2(horizontalBaseChunk, dur * 2, MAX, { ...smallSize });
-    const _3c = await putVideoOnVideo_v2(_1c, _2c);
-    const _4c = await createVideo_v2(job, _3c, 0, MAX, "VERTICAL");
-    const _5c = await drawTextOnVideo(_4c, "Strefa egzaminacyjna", textOptions);
-    const final_c = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_c.mp4");
-    fs.copySync(_5c, final_c);
-    fs.copySync(final_c, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_c).nameWithExt));
-  }
-
-  if (duration >= 3 * DURATION_LIMIT && duration < DURATION_LIMIT * 4) {
-    log(444444444, "Duration is more than 3 min and less than 4 min", { duration });
-    const dur = Math.floor(duration / 4);
-    const _1a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { blur: 7 });
-    const _2a = await manipulateVideo_v2(horizontalBaseChunk, 0, dur, { ...smallSize });
-    const _3a = await putVideoOnVideo_v2(_1a, _2a);
-    const _4a = await createVideo_v2(job, _3a, 0, MAX, "VERTICAL");
-    const _5a = await drawTextOnVideo(_4a, "Strefa egzaminacyjna", textOptions);
-    const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_a.mp4");
-    fs.copySync(_5a, final_a);
-    fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
-
-    const _1b = await manipulateVideo_v2(horizontalBaseChunk, dur, dur * 2, { blur: 7 });
-    const _2b = await manipulateVideo_v2(horizontalBaseChunk, dur, dur * 2, { ...smallSize });
-    const _3b = await putVideoOnVideo_v2(_1b, _2b);
-    const _4b = await createVideo_v2(job, _3b, 0, MAX, "VERTICAL");
-    const _5b = await drawTextOnVideo(_4b, "Strefa egzaminacyjna", textOptions);
-    const final_b = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_b.mp4");
-    fs.copySync(_5b, final_b);
-    fs.copySync(final_b, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_b).nameWithExt));
-
-    const _1c = await manipulateVideo_v2(horizontalBaseChunk, dur * 2, dur * 3, { blur: 7 });
-    const _2c = await manipulateVideo_v2(horizontalBaseChunk, dur * 2, dur * 3, { ...smallSize });
-    const _3c = await putVideoOnVideo_v2(_1c, _2c);
-    const _4c = await createVideo_v2(job, _3c, 0, MAX, "VERTICAL");
-    const _5c = await drawTextOnVideo(_4c, "Strefa egzaminacyjna", textOptions);
-    const final_c = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_c.mp4");
-    fs.copySync(_5c, final_c);
-    fs.copySync(final_c, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_c).nameWithExt));
-
-    const _1d = await manipulateVideo_v2(horizontalBaseChunk, dur * 3, MAX, { blur: 7 });
-    const _2d = await manipulateVideo_v2(horizontalBaseChunk, dur * 3, MAX, { ...smallSize });
-    const _3d = await putVideoOnVideo_v2(_1d, _2d);
-    const _4d = await createVideo_v2(job, _3d, 0, MAX, "VERTICAL");
-    const _5d = await drawTextOnVideo(_4d, "Strefa egzaminacyjna", textOptions);
-    const final_d = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + "_d.mp4");
-    fs.copySync(_5d,  final_d);
-    fs.copySync(final_d, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_d).nameWithExt));
   }
 };

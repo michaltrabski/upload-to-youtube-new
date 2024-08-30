@@ -258,14 +258,6 @@ export function drawTextOnVideo(originalVideoPath: string, text: string, options
     const rnd = Math.floor(Math.random() * 999999) + 1;
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${rnd}.mp4`);
 
-    // const filterOptions = `drawtext=fontfile=font.ttf:text='${text}':fontsize=60:fontcolor=red:x=(main_w/2-text_w/2):y=50:shadowcolor=black:shadowx=2:shadowy=2`;
-    // const filterOptions = `drawtext=fontfile=font.ttf:text='${text}':fontsize=60:fontcolor=red:x=(main_w/2-text_w/2):y=50:shadowcolor=black:shadowx=2:shadowy=2:fontfile=font.ttf:encoding=utf8`;
-    // const filterOptions = `drawtext=fontfile=${options.fontfile}:text='${text}':fontsize=${
-    //   options.fontsize
-    // }:fontcolor=${options.fontcolor}:x=${options.x}:y=${options.y}:shadowcolor=${options.shadowcolor}:shadowx=${
-    //   options.shadowx
-    // }:shadowy=${options.shadowy}${options.encoding ? `:encoding=${options.encoding}` : ""}`;
-
     const { fontsize, fontcolor, x, y, shadowcolor, shadowx, shadowy, encoding } = options;
     const filterOptions = `drawtext=text='${text}':fontsize=${fontsize}:fontcolor=${fontcolor}:x=${x}:y=${y}:shadowcolor=${shadowcolor}:shadowx=${shadowx}:shadowy=${shadowy}${
       encoding ? `:encoding=${encoding}` : ""
@@ -315,13 +307,33 @@ export const getVideoDimensions = (
   });
 };
 
+interface TextFilterOptions {
+  fontfile?: string;
+  text: string;
+  fontsize: number;
+  fontcolor: string;
+  x: string;
+  y: string;
+  box: number;
+  boxcolor: string;
+  boxborderw: number;
+  shadowcolor: string;
+  shadowx: number;
+  shadowy: number;
+}
+
+export interface TextFilter {
+  filter: string;
+  options: TextFilterOptions;
+}
+
 export function createVideo_v2(
   job: Job,
-  // fps: number,
   originalVideoPath: string,
   originalVideoTrimFrom: number,
   originalVideoTrimTo: number,
-  format: "HORIZONTAL" | "VERTICAL"
+  format: "HORIZONTAL" | "VERTICAL",
+  textFilter?: TextFilter
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const prefix = md5(
@@ -336,8 +348,6 @@ export function createVideo_v2(
     }
 
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
-
-    let percent = 0;
 
     const from = originalVideoTrimFrom;
     const to = originalVideoTrimTo;
@@ -355,8 +365,7 @@ export function createVideo_v2(
         .input(originalVideoPath)
         .setStartTime(originalVideoTrimFrom)
         .setDuration(originalVideoTrimTo - originalVideoTrimFrom)
-        // .fps(29.97)
-        .videoFilters(newFlip)
+        .videoFilters([...newFlip, textFilter])
         .output(producedVideoPathTemp)
         .on("end", () => {
           renameSync(producedVideoPathTemp, producedVideoPath);
@@ -368,14 +377,6 @@ export function createVideo_v2(
           }
         })
         .on("error", (err: any) => reject(err))
-        // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
-        // .videoCodec("libx264")
-        // .videoBitrate(1000)
-        // .noAudio()
-        // .videoFilters("fade=in:0:30")
-        // .videoFilters("fade=in:0:30", "pad=640:480:0:40:violet")
-        // .size(`${400}x?`) // michal
-        // .size(`${1920}x${1080}y`)
         .run();
     }
 
@@ -384,7 +385,7 @@ export function createVideo_v2(
         .input(originalVideoPath)
         .setStartTime(originalVideoTrimFrom)
         .setDuration(originalVideoTrimTo - originalVideoTrimFrom)
-        .videoFilters(newFlip)
+        .videoFilters([...newFlip, textFilter, "crop=ih*9/16:ih:(iw-ow)/2:(ih-oh)/2"])
         .output(producedVideoPathTemp)
         .on("end", () => {
           renameSync(producedVideoPathTemp, producedVideoPath);
@@ -396,16 +397,44 @@ export function createVideo_v2(
           }
         })
         .on("error", (err: any) => reject(err))
-        // .fps(29.97)
-        // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
-        // .videoCodec("libx264")
-        // .videoBitrate(1000)
-        // .noAudio()
-        // .videoFilters("fade=in:0:30")
-        // .videoFilters("fade=in:0:30", "pad=640:480:0:40:violet")
-        // .size(`${50}x?`) // michal
-        .videoFilter("crop=ih*9/16:ih:(iw-ow)/2:(ih-oh)/2")
         .run();
     }
+  });
+}
+
+export async function mergeVideos_v2(videoPaths: string[], producedVideoPath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
+    }
+
+    const rnd = Math.floor(Math.random() * 999999) + 1;
+
+    const producedVideoPathTemp = p(f(producedVideoPath).path, `_______temp_${rnd}.mp4`);
+    const ffmpeg = require("fluent-ffmpeg");
+
+    let command = ffmpeg();
+
+    videoPaths.forEach((videoPath) => {
+      command = command.input(videoPath);
+    });
+
+    command
+      .on("error", (err: any) => {
+        console.error(`Error: ${err}`);
+      })
+      .on("progress", (p: any) => {
+        if (Math.floor(p.percent) % 10 === 0) {
+          console.log(`progress: ${Math.floor(p.percent)}%`);
+        }
+      })
+      .on("end", () => {
+        renameSync(producedVideoPathTemp, producedVideoPath);
+        resolve(producedVideoPath);
+      })
+      .on("error", (err: any) => reject(err))
+      .mergeToFile(producedVideoPathTemp, f(producedVideoPath).path);
   });
 }

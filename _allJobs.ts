@@ -190,15 +190,15 @@ const parkAcarHorizontalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 3,
-  TRIM_LATER: 5,
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 10,
+  TRIM_EALIER: 2,
+  TRIM_LATER: 4,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 7,
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
   BASE_FOLDER: p(__dirname, "parkowanie-samochodu"),
   FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: false,
+  CREATE_VERTICAL_CHUNKS: true,
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
@@ -225,8 +225,8 @@ export const ALL_JOBS: Job[] = [
   // HORIZONTAL
   { ...createChunksHorizontalVideo, EXECUTE: false },
 
-  { ...parkAcarHorizontalVideo, EXECUTE: false },
-  { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: true },
+  { ...parkAcarHorizontalVideo, EXECUTE: true },
+  { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: false },
 
   { ...eBikeHorizontalVideo, EXECUTE: false },
   { ...eBikeHorizontalVideoGarmin, EXECUTE: false },
