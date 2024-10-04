@@ -3,6 +3,7 @@ import {
   ensureDir,
   ensureDirSync,
   existsSync,
+  fstat,
   moveSync,
   promises,
   readFileSync,
@@ -45,8 +46,15 @@ import { videoInVideo } from "./_utils/videoInVideo";
 
 import { ALL_JOBS } from "./_allJobs";
 
-import { createSingleVideoExam } from "./_utils/testy-shorts/testyLong";
-import { drawTextOnVideo, getVideoDimensions, mergeVideos_v2 } from "./_utils/ffmpeg-v2";
+import { createSingleVideoExam } from "./_utils/testy-na-prawo-jazdy/testyLong";
+import {
+  addMp3ToVideoWithBothAudioTracks,
+  drawTextOnVideo,
+  getVideoDimensions,
+  mergeVideos_v2,
+} from "./_utils/ffmpeg-v2";
+import { createVideoWithAnyExamQuestions } from "./_utils/testy-na-prawo-jazdy/videoWithAnyQuestions";
+import { getAllMp3InFolder, getAllMp4InFolder } from "./utils_v2";
 
 require("dotenv").config();
 
@@ -120,6 +128,39 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
       await createSingleVideoExam(job);
+    }
+
+    if (TYPE === "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS") {
+      await createVideoWithAnyExamQuestions(
+        job,
+        "https://www.poznaj-testy.pl/api/video/difficult.json",
+        50,
+        "https://hosting2421517.online.pro/testy-na-prawo-jazdy/mp4/czesc-w-tym-wideo-zaprezentuje-wam-liste-piecdziesieciu-najtrudniejszych-pytan-testowych-kategorii-b.mp4"
+      );
+    }
+
+    if (TYPE === "MAKE_EBIKE_ACCELERATION_SHORTS_VIDEO") {
+      ensureDir(job.BASE_FOLDER);
+      ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
+      const videos = getAllMp4InFolder(job.BASE_FOLDER).filter((v) => !v.includes("RESULT") && !v.includes("TEMP"));
+      const mp3s = getAllMp3InFolder(job.BASE_FOLDER);
+      console.log({ videos, mp3s });
+
+      videos.forEach((video, i) => {
+        setTimeout(() => {
+          console.log(i);
+          const randomMp3 = mp3s[Math.floor(Math.random() * mp3s.length)];
+          addMp3ToVideoWithBothAudioTracks(p(job.BASE_FOLDER, video), p(job.BASE_FOLDER, randomMp3)).then((video) => {
+            copyFileSync(video, p(job.BASE_FOLDER + "_PRODUCED", "RESULT_" + f(video).nameWithExt));
+            copyFileSync(
+              video,
+              p(job.BASE_FOLDER + "_PRODUCED", `Test nr ${i + 1} przyspieszenia roweru elektrycznego.mp4`)
+            );
+            console.log("done");
+          });
+        }, 0);
+      });
+      // const res = await addMp3ToVideoWithBothAudioTracks(videos[0], mp3s[0]);
     }
   }
 
@@ -203,63 +244,6 @@ function copyAllChunks(job: Job, videos: VideoChunk[]) {
 
   writeFileSync(p(folderToCopy, "zapier-text.txt"), zapierText);
 }
-
-// function copyVideos_DEPRECATED(job: Job, videos: VideoChunk[]) {
-//   const videosToMerge: string[] = [];
-//   log("Files to copy = ", videos.length, createdVideosData.VERTICAL.length);
-//   createdVideosData[job.ORIENTATION].forEach((video, i) => {
-//     const currentVideoData = videos.find((v) => v.path === video.videoPath);
-
-//     const folder = p(job.PRODUCED_FOLDER);
-//     const folderWIthNumber = p(job.PRODUCED_FOLDER, `${i + 1}`);
-
-//     log({ folder, folderWIthNumber });
-
-//     ensureDirSync(folderWIthNumber);
-
-//     copyFileSync(video.videoPath, p(folder, video.videoName));
-//     copyFileSync(video.videoPath, p(folderWIthNumber, video.videoName.split(" ").splice(1).join(" ")));
-
-//     videosToMerge.push(p(folderWIthNumber, video.videoName.split(" ").splice(1).join(" ")));
-
-//     if (existsSync(video.screenshotPath)) {
-//       copyFileSync(video.screenshotPath, p(folderWIthNumber, video.screenshotName));
-//     }
-//     writeJSONSync(p(folderWIthNumber, "data.json"), { ...currentVideoData, ...video });
-
-//     writeFileSync(
-//       p(folderWIthNumber, "opis.txt"),
-//       // "Przedstawiam 32 pytania z egzaminu teoretycznego na prawo jazdy kategorii B 2024!" +
-//       // "\n\n" +
-//       (
-//         "Rozwiąż test na prawo jazdy na stronie https://www.poznaj-testy.pl/" +
-//         // "Take a driving test on the website https://www.poznaj-testy.pl/" +
-//         "\n\n" +
-//         "Lista 100 najtrudniejszych pytań: https://www.poznaj-testy.pl/statystyki" +
-//         "\n\n" +
-//         currentVideoData?.description +
-//         "\n\n"
-//       ).slice(0, 4900)
-//     );
-
-//     writeFileSync(
-//       p(folder, `${i + 1} opis.txt`),
-//       // "Przedstawiam 32 pytania z egzaminu teoretycznego na prawo jazdy kategorii B 2024!" +
-//       // "\n\n" +
-//       (
-//         "Rozwiąż test na prawo jazdy na stronie https://www.poznaj-testy.pl/" +
-//         // "Take a driving test on the website https://www.poznaj-testy.pl/" +
-//         "\n\n" +
-//         "Lista 100 najtrudniejszych pytań: https://www.poznaj-testy.pl/statystyki" +
-//         "\n\n" +
-//         currentVideoData?.description +
-//         "\n\n"
-//       ).slice(0, 4900)
-//     );
-//   });
-
-//   return { videosToMerge };
-// }
 
 function createAllVideosDataSlim(allVideos: VideoChunk[]) {
   const allVideosSlim = allVideos.map((v, i) => {
@@ -393,7 +377,7 @@ async function createAllVideosData(settings: Job) {
 
     if (originalVideo.includes("thumbnail")) {
       const videoPath = p(folderPath, originalVideo);
-      const duration = await getVideoDuration(videoPath);
+
       const pointsInTime = [
         ...[...Array(10)].map((_, i) => `00:00:0${i}`),
         ...[...Array(30)].map((_, i) => `00:00:${10 + i}`),
@@ -403,9 +387,7 @@ async function createAllVideosData(settings: Job) {
         // await
         createScreenshot(videoPath, f(videoPath).path, pointInTime);
       }
-
-      log("skipping thumbnail", { originalVideo });
-      throw new Error("thumbnail");
+      continue;
     }
 
     const originalVideoPath = path.join(folderPath, originalVideo);

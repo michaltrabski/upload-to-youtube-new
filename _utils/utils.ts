@@ -21,6 +21,7 @@ import {
   manipulateVideo_v2,
   putVideoOnVideo_v2,
 } from "./ffmpeg-v2";
+import axios from "axios";
 
 export const p = path.resolve;
 export const log = console.log;
@@ -377,5 +378,29 @@ export const createVerticalChunksWithDurationLimit = async (
     const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + `_${i}.mp4`);
     fs.copySync(_4a, final_a);
     fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
+    fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt.split(" ").slice(1).join(" ")));
+  }
+};
+
+export const downloadVideo = async (url: string, outputPath: string): Promise<string> => {
+  if (existsSync(outputPath)) {
+    console.log(`Video already exists at ${outputPath}`);
+    return outputPath;
+  }
+
+  try {
+    // Fetch the video data from the remote URL
+    const response = await axios.get(url, { responseType: "arraybuffer" });
+
+    // Write the video data to the file
+    writeFileSync(outputPath, response.data);
+
+    console.log(`Video downloaded successfully to ${outputPath}`);
+
+    // Return the full path of the downloaded file
+    return outputPath;
+  } catch (error) {
+    console.error("Error downloading the video:", error);
+    throw error;
   }
 };

@@ -4,6 +4,8 @@ const sharp = require("sharp");
 import { exec } from "child_process";
 const { getVideoDurationInSeconds } = require("get-video-duration");
 import md5 from "md5";
+const sizeOf = require("image-size");
+const textToImage = require("text-to-image");
 
 import fs, { copyFileSync, copySync, exists, existsSync, renameSync } from "fs-extra";
 import { ManipulateVideoOptions, Job } from "./types";
@@ -64,6 +66,10 @@ export async function manipulateVideo_v2(
       command.size(`${options.scale}%`);
     }
 
+    if (options.fps) {
+      command.fps(options.fps);
+    }
+
     // if (options.volume === 0) {
     //   command.noAudio();
     // }
@@ -99,7 +105,7 @@ export async function manipulateVideo_v2(
         command
           .output(producedVideoPathTemp)
           // .size(options.size)
-          // .fps(29.97)
+          .fps(29.97)
           .on("end", () => {
             renameSync(producedVideoPathTemp, producedVideoPath);
             resolve(producedVideoPath);
@@ -136,7 +142,7 @@ export async function manipulateVideo_v2(
         command
           .output(producedVideoPathTemp)
           // .size(options.size)
-          // .fps(29.97)
+          .fps(29.97)
           .on("end", () => {
             renameSync(producedVideoPathTemp, producedVideoPath);
             resolve(producedVideoPath);
@@ -153,7 +159,7 @@ export async function manipulateVideo_v2(
       command
         .output(producedVideoPathTemp)
         // .size(options.size)
-        // .fps(29.97)
+        .fps(29.97)
         .on("end", () => {
           renameSync(producedVideoPathTemp, producedVideoPath);
           resolve(producedVideoPath);
@@ -438,3 +444,115 @@ export async function mergeVideos_v2(videoPaths: string[], producedVideoPath: st
       .mergeToFile(producedVideoPathTemp, f(producedVideoPath).path);
   });
 }
+
+export const putPngOnVideo_v2 = async (videoPath: string, pngPath: string, x = 0, y = 0): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const prefix = md5(JSON.stringify({ videoPath, pngPath, x, y })).slice(0, 10);
+    const producedVideoPath = p(f(videoPath).path, `${f(videoPath).name}_${prefix}.mp4`);
+
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
+    }
+
+    const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
+
+    ffmpeg()
+      .input(videoPath)
+      .input(pngPath)
+      .fps(29.97)
+      .complexFilter([
+        {
+          filter: "overlay",
+          options: { x, y }, // Adjust these values to position the PNG
+          inputs: ["0:v", "1:v"],
+        },
+      ])
+      .output(producedVideoPathTemp)
+      .on("progress", (p) => log(`    progress: ${Math.floor(p.percent)}%`))
+      .on("end", () => {
+        renameSync(producedVideoPathTemp, producedVideoPath);
+        resolve(producedVideoPath);
+      })
+      .on("error", (err) => reject(err))
+      .run();
+  });
+};
+
+export const textToPng_v2 = async (job: Job, text: string, options: any): Promise<[string, number, number]> => {
+  const prefix = md5(JSON.stringify({ text, options })).slice(0, 10);
+
+  const procucedFileLocation = p(job.BASE_FOLDER, `${text}_${md5(prefix)}.png`);
+
+  if (existsSync(procucedFileLocation)) {
+    const dimensions = sizeOf(procucedFileLocation);
+
+    const width = dimensions.width;
+    const height = dimensions.height;
+
+    return [procucedFileLocation, width, height];
+  }
+
+  const dataUriLogo = await textToImage.generate(text, {
+    fontFamily: "Arial",
+    // maxWidth: 250,
+    // fontSize: 35,
+    // lineHeight: 40,
+    // margin: 10,
+    // bgColor: "yellow", // "#475569", // slate 600
+    // textColor: "black",
+
+    ...options,
+  });
+
+  fs.writeFileSync(procucedFileLocation, dataUriLogo.split(",")[1], "base64");
+
+  const dimensions = sizeOf(procucedFileLocation);
+
+  const width = dimensions.width;
+  const height = dimensions.height;
+
+  return [procucedFileLocation, width, height];
+};
+
+export const addMp3ToVideoWithBothAudioTracks = async (originalVideoPath: string, mp3Path: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const producedVideoPath = p(f(originalVideoPath).path, `RESULT_${f(originalVideoPath).nameWithExt}`);
+    const producedVideoPathTemp = p(f(producedVideoPath).path, `_TEMP_${Math.random()}.mp4`);
+
+    if (existsSync(producedVideoPath) && PREVENT_OVERRIDE) {
+      log("video already exists:", producedVideoPath);
+      resolve(producedVideoPath);
+      return;
+    }
+
+    ffmpeg(originalVideoPath)
+      .input(mp3Path)
+      .complexFilter([
+        "[0:v]null[v]", // Keep the video stream unchanged
+        "[0:a][1:a]amix=inputs=2[a]", // Mix the audio streams
+      ])
+      .map("[v]")
+      .map("[a]")
+      .outputOptions([
+        // "-c:v libx264", // Re-encode the video stream using libx264 codec
+        // "-crf 18", // Set the CRF value for high quality
+        // "-preset veryslow", // Use a slower preset for better compression
+        // "-c:a aac", // Encode the audio stream using AAC codec
+        // "-b:a 128k", // Set audio bitrate
+      ])
+      .output(producedVideoPathTemp)
+      .on("progress", (p: any) => {
+        if (Math.floor(p.percent) % 10 === 0) {
+          console.log(`progress: ${Math.floor(p.percent)}%`);
+        }
+      })
+      .on("end", () => {
+        renameSync(producedVideoPathTemp, producedVideoPath);
+        resolve(producedVideoPath);
+      })
+      .on("error", (err: any) => reject(err))
+      .run();
+  });
+};

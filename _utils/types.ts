@@ -3,7 +3,13 @@ export type Format = "HORIZONTAL" | "VERTICAL";
 
 export interface Job {
   EXECUTE?: boolean;
-  TYPE?: "MAKE_HORIZONTAL_VIDEO" | "TRIM_VIDEO_TESTY_YOUTUBE" | "MAKE_LONG_WITH_DRIVING_QUESTIONS" | "MERGE_VIDEOS";
+  TYPE?:
+    | "MAKE_HORIZONTAL_VIDEO"
+    | "TRIM_VIDEO_TESTY_YOUTUBE"
+    | "MAKE_LONG_WITH_DRIVING_QUESTIONS"
+    | "MERGE_VIDEOS"
+    | "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS"
+    | "MAKE_EBIKE_ACCELERATION_SHORTS_VIDEO";
   ORIENTATION: "HORIZONTAL" | "VERTICAL";
   DEEPGRAM_LANG: "en" | "pl";
   TRIM_EALIER: number;
@@ -35,6 +41,7 @@ export interface ManipulateVideoOptions {
   crop?: number;
   cropTopRight?: number;
   volume?: number;
+  fps?: number;
 }
 
 export interface DrivingQuestion {

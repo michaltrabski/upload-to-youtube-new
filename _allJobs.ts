@@ -85,6 +85,22 @@ const createLongVideosWithDrivingQuestions: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const videosWithAnyDrivingQuestions: Job = {
+  TYPE: "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS",
+  ORIENTATION: "VERTICAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "video-with-any-questions"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 const eBikeHorizontalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
@@ -153,6 +169,23 @@ const eBikeVerticalVideo: Job = {
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const eBikeAccelerationShortsVideo: Job = {
+  TYPE: "MAKE_EBIKE_ACCELERATION_SHORTS_VIDEO",
+  ORIENTATION: "VERTICAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 1,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 999999,
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "ebike-acceleration-shorts"),
+  FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+  MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 const dieselHeaterVerticalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "VERTICAL",
@@ -190,15 +223,15 @@ const parkAcarHorizontalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 2,
-  TRIM_LATER: 4,
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 7,
+  TRIM_EALIER: 0.5,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2,
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
   BASE_FOLDER: p(__dirname, "parkowanie-samochodu"),
-  FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
+  FLIP_CHUNK: true, // garmin records videos upside down on chesty mount
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: true,
+  CREATE_VERTICAL_CHUNKS: false,
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
@@ -225,7 +258,7 @@ export const ALL_JOBS: Job[] = [
   // HORIZONTAL
   { ...createChunksHorizontalVideo, EXECUTE: false },
 
-  { ...parkAcarHorizontalVideo, EXECUTE: true },
+  { ...parkAcarHorizontalVideo, EXECUTE: false },
   { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: false },
 
   { ...eBikeHorizontalVideo, EXECUTE: false },
@@ -233,9 +266,12 @@ export const ALL_JOBS: Job[] = [
 
   { ...mergeVideos, EXECUTE: false },
 
-  { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
+  { ...createLongVideosWithDrivingQuestions, EXECUTE: true },
+  { ...videosWithAnyDrivingQuestions, EXECUTE: false },
 
   // VERTICAL
   { ...eBikeVerticalVideo, EXECUTE: false },
   { ...dieselHeaterVerticalVideo, EXECUTE: false },
+
+  { ...eBikeAccelerationShortsVideo, EXECUTE: false },
 ];
