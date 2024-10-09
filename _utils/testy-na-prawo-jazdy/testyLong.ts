@@ -53,27 +53,27 @@ export const createSingleVideoExam = async (job: Job) => {
     ensureDirSync(BASE_FOLDER);
     ensureDirSync(PRODUCED_FOLDER);
 
-    // const scale = 1;
-    // const WIDTH = 1920 / scale;
-    // const HEIGHT = 1080 / scale;
-    // const VIDEO_DURATION_LIMIT = 999999999;
-    // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
-    // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 9999999;
-    // const GAP = 20;
-    // const PNG_BG_COLOR = "rgb(71 85 105)";
-    // const PNG_BG_COLOR_GREEN = "#15803d";
-    // const DISABLE_ADDS = false;
-
-    const scale = 2;
+    const scale = 1;
     const WIDTH = 1920 / scale;
     const HEIGHT = 1080 / scale;
-    const VIDEO_DURATION_LIMIT = 2;
-    const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 20;
-    const PRODUCED_SHORTS_LIMIT_SLICE_TO = 20 + 1;
+    const VIDEO_DURATION_LIMIT = 999999999;
+    const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 0;
+    const PRODUCED_SHORTS_LIMIT_SLICE_TO = 9999999;
     const GAP = 20;
     const PNG_BG_COLOR = "rgb(71 85 105)";
     const PNG_BG_COLOR_GREEN = "#15803d";
     const DISABLE_ADDS = false;
+
+    // const scale = 2;
+    // const WIDTH = 1920 / scale;
+    // const HEIGHT = 1080 / scale;
+    // const VIDEO_DURATION_LIMIT = 2;
+    // const PRODUCED_SHORTS_LIMIT_SLICE_FROM = 20;
+    // const PRODUCED_SHORTS_LIMIT_SLICE_TO = 20 + 1;
+    // const GAP = 20;
+    // const PNG_BG_COLOR = "rgb(71 85 105)";
+    // const PNG_BG_COLOR_GREEN = "#15803d";
+    // const DISABLE_ADDS = false;
 
     const firstExamFromFile = exams[0];
     const { examSlug } = firstExamFromFile;
