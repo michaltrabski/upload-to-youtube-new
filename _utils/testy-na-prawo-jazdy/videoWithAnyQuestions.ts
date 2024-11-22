@@ -177,7 +177,6 @@ async function createSingleQuestionVideo(
   const singleQuestionVideo = pb(`${id}.mp4`);
 
   if (existsSync(singleQuestionVideo)) {
-    log("singleQuestionVideo exist", singleQuestionVideo);
     return singleQuestionVideo;
   }
 

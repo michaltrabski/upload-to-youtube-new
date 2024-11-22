@@ -1,15 +1,19 @@
 export type Format = "HORIZONTAL" | "VERTICAL";
 // const createdVideos: CreatedVideoData[] = [];
 
+type VideoType =
+  | "MAKE_HORIZONTAL_VIDEO"
+  | "TRIM_VIDEO_TESTY_YOUTUBE"
+  | "MAKE_LONG_WITH_DRIVING_QUESTIONS"
+  | "MERGE_VIDEOS"
+  | "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS"
+  | "MAKE_EBIKE_ACCELERATION_SHORTS_VIDEO"
+  | "CREATE_EXAM"
+  | "ROWER_PRZYSPIESZONE_WIDEO_Z_GADANIEM"
+  | "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM";
 export interface Job {
   EXECUTE?: boolean;
-  TYPE?:
-    | "MAKE_HORIZONTAL_VIDEO"
-    | "TRIM_VIDEO_TESTY_YOUTUBE"
-    | "MAKE_LONG_WITH_DRIVING_QUESTIONS"
-    | "MERGE_VIDEOS"
-    | "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS"
-    | "MAKE_EBIKE_ACCELERATION_SHORTS_VIDEO";
+  TYPE?: VideoType;
   ORIENTATION: "HORIZONTAL" | "VERTICAL";
   DEEPGRAM_LANG: "en" | "pl";
   TRIM_EALIER: number;
@@ -27,12 +31,12 @@ export interface Job {
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS?: boolean;
 }
 
-export interface CreatedVideoData {
-  videoPath: string;
-  videoName: string;
-  screenshotPath: string;
-  screenshotName: string;
-}
+// export interface CreatedVideoData {
+//   videoPath: string;
+//   videoName: string;
+//   screenshotPath: string;
+//   screenshotName: string;
+// }
 
 export interface ManipulateVideoOptions {
   size?: string; // "1920x1080"

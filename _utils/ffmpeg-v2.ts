@@ -12,7 +12,7 @@ import { ManipulateVideoOptions, Job } from "./types";
 import { f, p } from "./utils";
 
 const PREVENT_OVERRIDE = true;
-const LOG = true;
+const LOG = false;
 
 function log(...args: any[]) {
   if (LOG) {
@@ -89,7 +89,7 @@ export async function manipulateVideo_v2(
         }
 
         const cropBy = (options.crop || 1) / 100;
-        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
+        log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -112,7 +112,7 @@ export async function manipulateVideo_v2(
           })
           .on("progress", (p: any) => {
             if (Math.floor(p.percent) % 10 === 0) {
-              console.log(`progress: ${Math.floor(p.percent)}%`);
+              log(`progress: ${Math.floor(p.percent)}%`);
             }
           })
           .on("error", (err: any) => reject(err))
@@ -126,7 +126,7 @@ export async function manipulateVideo_v2(
         }
 
         const cropBy = (options.cropTopRight || 1) / 100;
-        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
+        log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -149,7 +149,7 @@ export async function manipulateVideo_v2(
           })
           .on("progress", (p: any) => {
             if (Math.floor(p.percent) % 10 === 0) {
-              console.log(`progress: ${Math.floor(p.percent)}%`);
+              log(`progress: ${Math.floor(p.percent)}%`);
             }
           })
           .on("error", (err: any) => reject(err))
@@ -166,7 +166,7 @@ export async function manipulateVideo_v2(
         })
         .on("progress", (p: any) => {
           if (Math.floor(p.percent) % 10 === 0) {
-            console.log(`progress: ${Math.floor(p.percent)}%`);
+            log(`progress: ${Math.floor(p.percent)}%`);
           }
         })
         .on("error", (err: any) => reject(err))
@@ -214,7 +214,7 @@ export function putVideoOnVideo_v2(originalVideo1Path: string, originalVideo2Pat
         ffmpeg()
           .input(originalVideo1Path)
           .input(originalVideo2Path)
-          // .fps(29.97)
+          .fps(29.97)
           .complexFilter([
             // `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,0,20)'`,
             `[0:v][1:v] overlay=(W-w)/2:(H-h)/3'`,
@@ -224,7 +224,7 @@ export function putVideoOnVideo_v2(originalVideo1Path: string, originalVideo2Pat
           .output(producedVideoPathTemp)
           .on("progress", (p: any) => {
             if (Math.floor(p.percent) % 10 === 0) {
-              console.log(`progress: ${Math.floor(p.percent)}%`);
+              log(`progress: ${Math.floor(p.percent)}%`);
             }
           })
           .on("error", (err: any) => reject(err))
@@ -277,7 +277,7 @@ export function drawTextOnVideo(originalVideoPath: string, text: string, options
       .output(producedVideoPathTemp)
       .on("progress", (p: any) => {
         if (Math.floor(p.percent) % 10 === 0) {
-          console.log(`progress: ${Math.floor(p.percent)}%`);
+          log(`progress: ${Math.floor(p.percent)}%`);
         }
       })
       .on("error", (err: any) => reject(err))
@@ -379,7 +379,7 @@ export function createVideo_v2(
         })
         .on("progress", (p: any) => {
           if (Math.floor(p.percent) % 10 === 0) {
-            console.log(`progress: ${Math.floor(p.percent)}%`);
+            log(`progress: ${Math.floor(p.percent)}%`);
           }
         })
         .on("error", (err: any) => reject(err))
@@ -399,7 +399,7 @@ export function createVideo_v2(
         })
         .on("progress", (p: any) => {
           if (Math.floor(p.percent) % 10 === 0) {
-            console.log(`progress: ${Math.floor(p.percent)}%`);
+            log(`progress: ${Math.floor(p.percent)}%`);
           }
         })
         .on("error", (err: any) => reject(err))
@@ -433,7 +433,7 @@ export async function mergeVideos_v2(videoPaths: string[], producedVideoPath: st
       })
       .on("progress", (p: any) => {
         if (Math.floor(p.percent) % 10 === 0) {
-          console.log(`progress: ${Math.floor(p.percent)}%`);
+          log(`progress: ${Math.floor(p.percent)}%`);
         }
       })
       .on("end", () => {
@@ -545,7 +545,7 @@ export const addMp3ToVideoWithBothAudioTracks = async (originalVideoPath: string
       .output(producedVideoPathTemp)
       .on("progress", (p: any) => {
         if (Math.floor(p.percent) % 10 === 0) {
-          console.log(`progress: ${Math.floor(p.percent)}%`);
+          log(`progress: ${Math.floor(p.percent)}%`);
         }
       })
       .on("end", () => {

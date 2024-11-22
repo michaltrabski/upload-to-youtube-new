@@ -85,6 +85,22 @@ const createLongVideosWithDrivingQuestions: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const createExam: Job = {
+  TYPE: "CREATE_EXAM",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "testy-egzamin"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 const videosWithAnyDrivingQuestions: Job = {
   TYPE: "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS",
   ORIENTATION: "VERTICAL",
@@ -156,9 +172,9 @@ const eBikeVerticalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "VERTICAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 0.8,
-  TRIM_LATER: 1.5,
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 3,
+  TRIM_EALIER: 0.5,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2,
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
   BASE_FOLDER: p(__dirname, "ebike-vertical"),
@@ -166,6 +182,39 @@ const eBikeVerticalVideo: Job = {
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: true,
   CREATE_VERTICAL_CHUNKS: false,
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+  MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
+const rower_przyspieszone_wideo_z_gadaniem: Job = {
+  TYPE: "ROWER_PRZYSPIESZONE_WIDEO_Z_GADANIEM",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2,
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "ROWER_PRZYSPIESZONE_WIDEO_Z_GADANIEM"),
+  FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: true,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
+  MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+const rower_jazda_z_garminem_i_gadaniem: Job = {
+  TYPE: "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2,
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM"),
+  FLIP_CHUNK: true, // garmin records videos upside down on chesty mount
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false, // this  is slow and to work with michal
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
@@ -266,12 +315,17 @@ export const ALL_JOBS: Job[] = [
 
   { ...mergeVideos, EXECUTE: false },
 
-  { ...createLongVideosWithDrivingQuestions, EXECUTE: true },
+  { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   { ...videosWithAnyDrivingQuestions, EXECUTE: false },
+  { ...createExam, EXECUTE: false },
 
   // VERTICAL
   { ...eBikeVerticalVideo, EXECUTE: false },
   { ...dieselHeaterVerticalVideo, EXECUTE: false },
 
   { ...eBikeAccelerationShortsVideo, EXECUTE: false },
+
+  // FILMY ROWEROWE
+  { ...rower_przyspieszone_wideo_z_gadaniem, EXECUTE: false },
+  { ...rower_jazda_z_garminem_i_gadaniem, EXECUTE: true },
 ];

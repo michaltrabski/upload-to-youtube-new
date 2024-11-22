@@ -5,6 +5,7 @@ import path from "path";
 import md5 from "md5";
 
 const Jimp = require("jimp");
+
 const sizeOf = require("image-size");
 
 export const createTransparentPng = async (
@@ -77,7 +78,7 @@ export async function createPngWithText(
     const image = await new Jimp(width, height, bgColor);
 
     // Load font - assuming Jimp.loadFont is available and font path is correct
-    const fontPath = textOptions.font || Jimp.FONT_SANS_32_BLACK; // Default font path
+    const fontPath = textOptions.font || Jimp.FONT_SANS_128_WHITE; // Default font path
     const font = await Jimp.loadFont(fontPath);
 
     // Text positioning options (optional)
@@ -93,4 +94,26 @@ export async function createPngWithText(
   } catch (error) {
     console.error("Error creating PNG:", error);
   }
+}
+
+export async function putTextOnPng(
+  foregroundPath: string,
+  text: string,
+  options: { x: number; y: number; bgColor: string }
+) {
+  const { x, y, bgColor: textColor } = options;
+  const foregroundImage = await Jimp.read(foregroundPath);
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE);
+
+  const textWidth = Jimp.measureText(font, text);
+  const textHeight = Jimp.measureTextHeight(font, text, foregroundImage.getWidth());
+  const textX = x - textWidth / 2;
+  const textY = y - textHeight / 2;
+
+  const textImage = await Jimp.create(textWidth, textHeight, textColor);
+  textImage.print(font, 0, 0, text);
+
+  foregroundImage.composite(textImage, textX, textY);
+
+  await foregroundImage.writeAsync(foregroundPath);
 }

@@ -650,28 +650,19 @@ export async function mergeVideosWithBgMusic(
     // Add the MP3 as an input for the background music
     command = command.input(mp3Path);
 
-    // Apply a complex filter to mix the video audio with the MP3 audio
-    // Assuming all videos have the same audio configuration
     command
-      .complexFilter([
-        // Mix the audio from the videos and the MP3 file
-        // Adjust the inputs ([0:a][1:a]) based on the number of videos and their order
-        // This example assumes one video and one MP3 file
-        `[0:a][1:a]amix=inputs=${videoPaths.length + 1}:duration=longest[a]`,
-      ])
-      .outputOptions([
-        "-map 0:v", // Map the video stream from the first video input
-        "-map [a]", // Map the mixed audio stream
-      ])
-      .audioCodec("aac") // Set audio codec
-      .videoCodec("copy") // Copy the video stream without re-encoding
+      // .complexFilter([`[0:a][1:a]amix=inputs=${videoPaths.length + 1}:duration=longest[a]`])
+      // .outputOptions(["-map 0:v", "-map [a]"])
+      .outputOptions(["-map 0:v", "-map 1:a"]) // use this if there is muted video
+      .audioCodec("aac")
+      .videoCodec("copy")
       .on("error", (err: any) => reject(`Error: ${err}`))
       .on("progress", (progress: any) => log(`    progress: ${Math.floor(progress.percent)}%`))
       .on("end", () => {
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);
       })
-      .fps(29.97)
+      // .fps(29.97)
       .save(producedVideoPathTemp);
   });
 }

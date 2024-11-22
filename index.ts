@@ -3,16 +3,17 @@ import {
   ensureDir,
   ensureDirSync,
   existsSync,
-  fstat,
   moveSync,
   promises,
   readFileSync,
+  readJSONSync,
   readJsonSync,
   readdirSync,
   renameSync,
   statSync,
   writeFileSync,
   writeJSONSync,
+  writeJsonSync,
 } from "fs-extra";
 import path from "path";
 import { getSilentParts } from "@remotion/renderer";
@@ -29,7 +30,7 @@ import {
   recreateDirSync,
   trimVideoFromFolder,
 } from "./_utils/utils";
-import { Job, Format, CreatedVideoData } from "./_utils/types";
+import { Job, Format } from "./_utils/types";
 import {
   createSmallVideoForTranscript,
   createVideo,
@@ -55,15 +56,19 @@ import {
 } from "./_utils/ffmpeg-v2";
 import { createVideoWithAnyExamQuestions } from "./_utils/testy-na-prawo-jazdy/videoWithAnyQuestions";
 import { getAllMp3InFolder, getAllMp4InFolder } from "./utils_v2";
+import { createExam } from "./_utils/testy-na-prawo-jazdy/testyExam";
+import { ExamDataObj } from "./_utils/testy-na-prawo-jazdy/data/types";
+import { generateImages } from "./_utils/generateImages";
+import { putTextOnPng } from "./_utils/jimp_v2";
 
 require("dotenv").config();
 
 const { Deepgram } = require("@deepgram/sdk");
 
-const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
-  ["HORIZONTAL"]: [],
-  ["VERTICAL"]: [],
-};
+// const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
+//   ["HORIZONTAL"]: [],
+//   ["VERTICAL"]: [],
+// };
 
 (async function () {
   log("START");
@@ -73,6 +78,40 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
 
     if (!EXECUTE) {
       continue;
+    }
+
+    if (TYPE === "ROWER_PRZYSPIESZONE_WIDEO_Z_GADANIEM") {
+      ensureDir(job.BASE_FOLDER);
+      ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
+      await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
+      const allVideosHorizontal = await createAllVideosData(job);
+
+      // await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+
+      // if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
+      //   await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
+      // }
+
+      // if (job.MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS) {
+      //   await mergeAllChunksFromAllVideos(job, allVideosHorizontal);
+      // }
+    }
+
+    if (TYPE === "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM") {
+      ensureDir(job.BASE_FOLDER);
+      ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
+      await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
+      const allVideosHorizontal = await createAllVideosData(job);
+
+      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+
+      if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
+        await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
+      }
+
+      if (job.MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS) {
+        await mergeAllChunksFromAllVideos(job, allVideosHorizontal);
+      }
     }
 
     if (TYPE === "MAKE_HORIZONTAL_VIDEO") {
@@ -98,6 +137,7 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
 
     if (TYPE === "MERGE_VIDEOS") {
       const folder = job.BASE_FOLDER;
+
       ensureDirSync(folder);
       const files = readdirSync(folder);
       const mp4Files = files
@@ -124,17 +164,52 @@ const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
       const mergedVideoPathWithBgMusic = p(folder, "mergedWithBgMusic.mp4");
 
       await mergeVideosWithBgMusic([mergedVideoPath], mergedVideoPathWithBgMusic, bgMp3Trimmed);
+
+      // GENERATE THUMBNAILS IMAGES
+      if (true) {
+        const pathTofileNameWithPrompts = p(folder, "_thumbnails-descriptions-prompts.json");
+
+        if (!existsSync(pathTofileNameWithPrompts)) {
+          await writeJSONSync(pathTofileNameWithPrompts, [{ prompt: "" }, { prompt: "" }, { prompt: "" }], {
+            spaces: 2,
+          });
+        }
+
+        await generateImages(true, p(folder, "_thumbnails-descriptions-prompts.json"));
+      }
+
+      // await putTextOnPng(p(folder, "1.png"), " Wrocław ", { x: 100, y: 100, bgColor: "transparent" });
     }
 
     if (TYPE === "MAKE_LONG_WITH_DRIVING_QUESTIONS") {
       await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
-      await createSingleVideoExam(job);
+    }
+
+    if (TYPE === "CREATE_EXAM") {
+      const EXAM_DATA_JSON = "examDataObj1_30_difficultExams_b.json";
+
+      for (let counter of [...Array(10).keys()]) {
+        const exams_b_random: ExamDataObj = readJSONSync(
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON)
+        );
+
+        const examIndex = 0;
+        try {
+          await createExam(job, 0, exams_b_random.exams);
+        } catch (error) {
+          console.log("error", error);
+
+          throw new Error("STOP BECAUSE OF ERROR");
+        }
+        const allExamIndexes = [examIndex];
+
+        const exams_b_random_after = exams_b_random.exams.filter((_, index) => !allExamIndexes.includes(index));
+        writeJsonSync(
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON),
+          { exams: exams_b_random_after },
+          { spaces: 2 }
+        );
+      }
     }
 
     if (TYPE === "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS") {
