@@ -604,7 +604,7 @@ async function createSingleQuestionVideo(
   const singleVideoDuration = await getVideoDuration(singleQuestionVideo);
 
   // CREATE SHORT VIDEO
-  const bgShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
+if (media) {  const bgShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
     size,
     blur: 15,
     crop: 10,
@@ -622,10 +622,12 @@ async function createSingleQuestionVideo(
 
   const videoInVideoVertical = await makeVideoVertical_v3(CURRENT_EXAM_SUBFOLDER, videoInVideo, "videoInVideoVertical");
 
+  const questionTextMp3Short = remoteFolderWithMp3 + textToSlug160(text) + ".mp3";
+
   const videoInVideoVerticalMp3 = await addMp3ToVideo_v3(
     CURRENT_EXAM_SUBFOLDER,
     videoInVideoVertical,
-    questionTextMp3,
+    questionTextMp3Short,
     "__1 short_with_text_mp3"
   );
 
@@ -723,6 +725,6 @@ async function createSingleQuestionVideo(
   );
 
   copyFileSync(shortWithQuestionAndAnswer, p(PRODUCED_FOLDER, "_shorts", `${safeFileNameWithId}.mp4`));
-
+}
   return { video: singleQuestion, text, duration: singleVideoDuration };
 }

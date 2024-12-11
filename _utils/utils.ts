@@ -26,6 +26,7 @@ import axios from "axios";
 export const p = path.resolve;
 export const log = console.log;
 
+export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const f = (str: string) => {
   const ext = path.extname(str);
   const name = path.basename(str, ext);
@@ -316,25 +317,26 @@ export const createVerticalChunksWithDurationLimit = async (
   job: Job,
   originalVideoPath: string,
   producedChunkPathVertical: string,
-  maxShortDuration: number
+  maxShortDuration: number,
+  text: string
 ) => {
-  const textOptions = {
-    // fontfile: "path/to/font.ttf",
-    fontsize: 80,
-    fontcolor: "red",
-    x: "(main_w/2-text_w/2)",
-    y: "1250",
-    shadowcolor: "black",
-    shadowx: 2,
-    shadowy: 2,
-    // encoding: "utf8",
-  };
+  // const textOptions = {
+  //   // fontfile: "path/to/font.ttf",
+  //   fontsize: 80,
+  //   fontcolor: "red",
+  //   x: "(main_w/2-text_w/2)",
+  //   y: "1250",
+  //   shadowcolor: "black",
+  //   shadowx: 2,
+  //   shadowy: 2,
+  //   // encoding: "utf8",
+  // };
 
   const textFilter = {
     filter: "drawtext",
     options: {
       // fontfile: "/path/to/font.ttf", // Specify the path to the font file
-      text: "Parkowanie Samochodu", // Text to be drawn "Strefa egzaminacyjna"
+      text, // Text to be drawn
       fontsize: 80, // Font size
       fontcolor: "red", // Font color
       x: "(main_w/2-text_w/2)", // X position (centered)
@@ -376,9 +378,14 @@ export const createVerticalChunksWithDurationLimit = async (
     const _3a = await putVideoOnVideo_v2(_2a, _1a);
     const _4a = await createVideo_v2(job, _3a, 0, 99999999, "VERTICAL", textFilter);
     const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + `_${i}.mp4`);
+
+    await wait(3000);
     fs.copySync(_4a, final_a);
+    await wait(3000);
     fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt));
+    await wait(3000);
     fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt.split(" ").slice(1).join(" ")));
+    await wait(3000);
   }
 };
 

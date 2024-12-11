@@ -60,17 +60,27 @@ import { createExam } from "./_utils/testy-na-prawo-jazdy/testyExam";
 import { ExamDataObj } from "./_utils/testy-na-prawo-jazdy/data/types";
 import { generateImages } from "./_utils/generateImages";
 import { putTextOnPng } from "./_utils/jimp_v2";
+import {
+  createVideoForRovery_v1,
+  overlayVideosForRovery_v1,
+  putVideoOnVideoForRovery_v1,
+} from "./_utils/ffmpeg-for-rowery-v1";
+import { askChatGpt } from "./_utils/gpt";
 
 require("dotenv").config();
 
 const { Deepgram } = require("@deepgram/sdk");
 
-// const createdVideosData: { [key in Format]: CreatedVideoData[] } = {
-//   ["HORIZONTAL"]: [],
-//   ["VERTICAL"]: [],
-// };
+(async () => {
+  try {
+    await main();
+  } catch (error) {
+    console.log(`call main() again - ERROR: ${error}`);
+    await main();
+  }
+})();
 
-(async function () {
+async function main() {
   log("START");
 
   for (const job of ALL_JOBS) {
@@ -112,6 +122,25 @@ const { Deepgram } = require("@deepgram/sdk");
       if (job.MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS) {
         await mergeAllChunksFromAllVideos(job, allVideosHorizontal);
       }
+    }
+
+    if (TYPE === "ROWER_POKAZYWANIE_ROWERU_STOJACEGO") {
+      ensureDir(job.BASE_FOLDER);
+      ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
+      await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
+      const allVideosHorizontal = await createAllVideosData(job);
+
+      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+
+      if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
+        await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
+      }
+
+      if (job.MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS) {
+        await mergeAllChunksFromAllVideos(job, allVideosHorizontal);
+      }
+
+      // YT description created at the end
     }
 
     if (TYPE === "MAKE_HORIZONTAL_VIDEO") {
@@ -186,7 +215,7 @@ const { Deepgram } = require("@deepgram/sdk");
     }
 
     if (TYPE === "CREATE_EXAM") {
-      const EXAM_DATA_JSON = "examDataObj1_30_difficultExams_b.json";
+      const EXAM_DATA_JSON = "examDataObj2_30_difficultExams_b.json";
 
       for (let counter of [...Array(10).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
@@ -198,9 +227,8 @@ const { Deepgram } = require("@deepgram/sdk");
           await createExam(job, 0, exams_b_random.exams);
         } catch (error) {
           console.log("error", error);
-
-          throw new Error("STOP BECAUSE OF ERROR");
         }
+
         const allExamIndexes = [examIndex];
 
         const exams_b_random_after = exams_b_random.exams.filter((_, index) => !allExamIndexes.includes(index));
@@ -265,7 +293,7 @@ const { Deepgram } = require("@deepgram/sdk");
   }
 
   log("END");
-})();
+}
 
 async function mergeAllChunksFromAllVideos(job: Job, videos: VideoChunk[]) {
   const { BASE_FOLDER } = job;
@@ -679,25 +707,50 @@ async function getInfoFromTranscription(
     }
   }
 
+  // const inn = p(f(originalVideoPath).path, "1.mp4");
+  // const ou = p(f(originalVideoPath).path, "4.mp4");
+
+  // console.log(11111111111, { BASE_FOLDER, inn, ou });
+
+  // overlayVideosForRovery_v1(inn, ou, videoClips);
+  // await putVideoOnVideoForRovery_v1(f(originalVideoPath).path, inn, ou, "5");
+
   for (const chunkFromVideo of chunksFromVideo) {
     const producedChunkPath = chunkFromVideo.path;
 
     if (!existsSync(producedChunkPath)) {
-      await createVideo(
-        job,
-        originalVideoPath,
-        producedChunkPath,
-        chunkFromVideo.trimStart,
-        chunkFromVideo.trimEnd,
-        format
-      );
+      if (job.TYPE === "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM" || job.TYPE === "ROWER_POKAZYWANIE_ROWERU_STOJACEGO") {
+        await createVideoForRovery_v1(
+          job,
+          originalVideoPath,
+          producedChunkPath,
+          chunkFromVideo.trimStart,
+          chunkFromVideo.trimEnd,
+          format
+        );
+      } else {
+        await createVideo(
+          job,
+          originalVideoPath,
+          producedChunkPath,
+          chunkFromVideo.trimStart,
+          chunkFromVideo.trimEnd,
+          format
+        );
+      }
     }
 
     // VERTICAL VIDEO
     const producedChunkPathVertical = p(f(producedChunkPath).path, "V" + f(producedChunkPath).nameWithExt);
     if (job.CREATE_VERTICAL_CHUNKS) {
       // you can await or go on
-      createVerticalChunksWithDurationLimit(job, producedChunkPath, producedChunkPathVertical, 35); // await
+      await createVerticalChunksWithDurationLimit(
+        job,
+        producedChunkPath,
+        producedChunkPathVertical,
+        58,
+        "Zobacz CALY film"
+      ); // await
     }
   }
 
