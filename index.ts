@@ -215,23 +215,43 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM") {
-      const EXAM_DATA_JSON = "examDataObj2_30_difficultExams_b.json";
+      const EXAM_DATA_JSON = "examDataObj3_30_difficultExams_b.json";
 
       for (let counter of [...Array(10).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
           p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON)
         );
 
-        const examIndex = 0;
         try {
-          await createExam(job, 0, exams_b_random.exams);
+          await createExam(job, 0, exams_b_random.exams, "pl");
         } catch (error) {
-          console.log("error", error);
+          console.log("createExam error", error);
         }
 
-        const allExamIndexes = [examIndex];
+        const exams_b_random_after = exams_b_random.exams.filter((_, index) => ![0].includes(index));
+        writeJsonSync(
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON),
+          { exams: exams_b_random_after },
+          { spaces: 2 }
+        );
+      }
+    }
 
-        const exams_b_random_after = exams_b_random.exams.filter((_, index) => !allExamIndexes.includes(index));
+    if (TYPE === "CREATE_EXAM_EN") {
+      const EXAM_DATA_JSON = "examDataObj1_30_difficultExams_b_en.json";
+
+      for (let counter of [...Array(10).keys()]) {
+        const exams_b_random: ExamDataObj = readJSONSync(
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON)
+        );
+
+        try {
+          await createExam(job, 0, exams_b_random.exams, "en");
+        } catch (error) {
+          console.log("createExam error", error);
+        }
+
+        const exams_b_random_after = exams_b_random.exams.filter((_, index) => ![0].includes(index));
         writeJsonSync(
           p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON),
           { exams: exams_b_random_after },
@@ -707,13 +727,7 @@ async function getInfoFromTranscription(
     }
   }
 
-  // const inn = p(f(originalVideoPath).path, "1.mp4");
-  // const ou = p(f(originalVideoPath).path, "4.mp4");
-
-  // console.log(11111111111, { BASE_FOLDER, inn, ou });
-
-  // overlayVideosForRovery_v1(inn, ou, videoClips);
-  // await putVideoOnVideoForRovery_v1(f(originalVideoPath).path, inn, ou, "5");
+ 
 
   for (const chunkFromVideo of chunksFromVideo) {
     const producedChunkPath = chunkFromVideo.path;

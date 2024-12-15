@@ -125,17 +125,17 @@ export const putPngOnVideo_v3 = async (
 
     const procucedFileLocation = p(baseFolder, `${outputName}.mp4`);
 
-    if (prefix) {
-      console.log({
-        baseFolder,
-        videoPath,
-        pngPath,
-        x,
-        y,
-        prefix,
-        procucedFileLocation,
-      });
-    }
+    // if (prefix) {
+    //   console.log({
+    //     baseFolder,
+    //     videoPath,
+    //     pngPath,
+    //     x,
+    //     y,
+    //     prefix,
+    //     procucedFileLocation,
+    //   });
+    // }
 
     if (procucedFileLocation.includes("aaaaaaaaa_final_short")) {
       throw new Error(`procucedFileLocation contains spaces: ${procucedFileLocation}`);

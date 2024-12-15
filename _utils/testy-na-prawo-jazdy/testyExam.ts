@@ -1,47 +1,13 @@
-import {
-  copy,
-  copyFileSync,
-  ensureDirSync,
-  existsSync,
-  readFileSync,
-  readJSON,
-  readJSONSync,
-  writeFileSync,
-  writeJsonSync,
-} from "fs-extra";
+import { copyFileSync, ensureDirSync, existsSync, readFileSync, writeFileSync } from "fs-extra";
 const sharp = require("sharp");
-import {
-  addMp3ToVideo,
-  createPngFromVideoLastFrame,
-  getVideoDuration,
-  makeVideoVertical,
-  manipulateVideo,
-  mergeMp3Files,
-  mergeVideos,
-  pngToVideo,
-  putPngOnVideo,
-  putVideoOnVideo,
-} from "../ffmpeg";
-import { DrivingQuestion, Job } from "../types";
-import {
-  convertSecondsToYtTimestamp,
-  createScreenshot,
-  downloadVideo,
-  f,
-  log,
-  p,
-  safeFileName,
-  textToPng,
-  textToSlug160,
-} from "../utils";
-import axios from "axios";
-import { difficultQuestionsDB } from "./difficultQuestionsDB";
+import { getVideoDuration, mergeVideos } from "../ffmpeg";
+import { Job } from "../types";
+import { convertSecondsToYtTimestamp, createScreenshot, f, log, p, safeFileName, textToSlug160 } from "../utils";
 
-import { examsB } from "./exams-b";
-import { ExamData, ExamDataObj } from "./data/types";
-import { createPngWithText, createTransparentPng, overlayPng } from "../jimp";
-import { manipulateVideo_v2, mergeVideos_v2, putPngOnVideo_v2, textToPng_v2 } from "../ffmpeg-v2";
-import { overlayPng_v2 } from "../jimp_v2";
+import { ExamData } from "./data/types";
+import { createTransparentPng } from "../jimp";
+import { manipulateVideo_v2, mergeVideos_v2 } from "../ffmpeg-v2";
+
 import {
   addMp3ToVideo_v3,
   makeVideoVertical_v3,
@@ -51,8 +17,10 @@ import {
   putVideoOnVideo_v3,
   textToPng_v3,
 } from "../ffmpeg-v3";
+import { t } from "./translations";
 
-export const createExam = async (job: Job, examIndex: number, exams: ExamData[]): Promise<number> => {
+type Lang = "pl" | "en" | "de";
+export const createExam = async (job: Job, examIndex: number, exams: ExamData[], lang: Lang): Promise<number> => {
   const scale = 1;
   const WIDTH = 1920 / scale;
   const HEIGHT = 1080 / scale;
@@ -69,7 +37,7 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[])
   // const GAP = 20;
   // const PNG_BG_COLOR = "rgb(71 85 105)";
   // const PNG_BG_COLOR_GREEN = "#15803d";
-  // const LIMIT = 14;
+  // const LIMIT = 22;
 
   const currentExam = exams[examIndex];
   const { examQuestions32, examSlug } = currentExam;
@@ -90,7 +58,11 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[])
   const size = `${WIDTH}x${HEIGHT}`;
 
   const videoPath = p(BASE_DIR, "_ignore_files");
-  const audioPath = "https://hosting2421517.online.pro/testy-na-prawo-jazdy/mp3/";
+
+  let remoteFolderWithMp3 = "https://hosting2421517.online.pro/testy-na-prawo-jazdy/mp3/";
+  if (lang === "en") remoteFolderWithMp3 = remoteFolderWithMp3 + "en/";
+  if (lang === "de") remoteFolderWithMp3 = remoteFolderWithMp3 + "de/";
+
   const mp3_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp3");
   const mp4_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp4");
   const blankPng = p(BASE_DIR, "_silent_mp3", "blank.png");
@@ -114,7 +86,6 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[])
     i++;
 
     const { video, text, duration } = await createSingleQuestionVideo(
-      job,
       CURRENT_EXAM_SUBFOLDER,
       drivingQuestion,
       i,
@@ -128,13 +99,11 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[])
       PNG_BG_COLOR_GREEN,
       scale,
       size,
-      audioPath,
+      remoteFolderWithMp3,
       mp3_1000,
-      examVideosPaths,
       VIDEO_DURATION_LIMIT,
-      pb,
       PRODUCED_FOLDER,
-      BASE_DIR
+      lang
     );
 
     videos.push(video);
@@ -183,7 +152,6 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[])
 };
 
 async function createSingleQuestionVideo(
-  job: Job,
   CURRENT_EXAM_SUBFOLDER: string,
   drivingQuestion: any,
   i: number,
@@ -199,13 +167,12 @@ async function createSingleQuestionVideo(
   size: string,
   remoteFolderWithMp3: string,
   mp3_1000: string,
-  examVideosPaths: string[],
   VIDEO_DURATION_LIMIT: number,
-  pb: (path: string) => string,
   PRODUCED_FOLDER: string,
-  BASE_DIR: string
+  lang: Lang
 ): Promise<{ video: string; text: string; duration: number }> {
   const { id, media, text, r, a, b, c } = drivingQuestion;
+
   const singleQuestionVideo = p(CURRENT_EXAM_SUBFOLDER, `${id}_${i}.mp4`);
 
   if (existsSync(singleQuestionVideo)) {
@@ -219,11 +186,11 @@ async function createSingleQuestionVideo(
   const questionTextMp3 = remoteFolderWithMp3 + textToSlug160(questionText) + ".mp3";
 
   let answerText = "";
-  if (r === "t") answerText = "odpowiedź tak";
-  if (r === "n") answerText = "odpowiedź nie";
-  if (r === "a") answerText = `odpowiedź a ${a}`;
-  if (r === "b") answerText = `odpowiedź b ${b}`;
-  if (r === "c") answerText = `odpowiedź c ${c}`;
+  if (r === "t") answerText = t.odpowiedzTak[lang];
+  if (r === "n") answerText = t.odpowiedzNie[lang];
+  if (r === "a") answerText = `${t.odpowiedzA[lang]} ${a}`;
+  if (r === "b") answerText = `${t.odpowiedzB[lang]} ${b}`;
+  if (r === "c") answerText = `${t.odpowiedzC[lang]} ${c}`;
 
   const correctAnswerMp3 = remoteFolderWithMp3 + textToSlug160(answerText) + ".mp3";
 
@@ -254,9 +221,6 @@ async function createSingleQuestionVideo(
     return sourceMediaPngConvertedToVideo;
   };
 
-  // const ad1 = p(BASE_DIR, "_testy-egzamin-ads", "1.png");
-  // const ad1Video = await imageToSourceVideo(ad1);
-
   const baseVideo = await manipulateVideo_v2(
     isVideo ? sourceMedia : await imageToSourceVideo(sourceMedia),
     0,
@@ -271,7 +235,7 @@ async function createSingleQuestionVideo(
   // PNGs
   const [zobaczNaszaStrone, zobaczNaszaStroneWidth] = await textToPng_v3(
     CURRENT_EXAM_SUBFOLDER,
-    "Zobacz naszą stronę!",
+    t.zobaczNaszaStrone[lang],
     {
       maxWidth: 460,
       fontSize: 45 / scale,
@@ -300,7 +264,7 @@ async function createSingleQuestionVideo(
     textColor: "white",
   });
 
-  const answerYesPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, "Tak", {
+  const answerYesPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, t.tak[lang], {
     maxWidth: 100,
     fontSize: 50 / scale,
     lineHeight: 60 / scale,
@@ -309,7 +273,7 @@ async function createSingleQuestionVideo(
     textColor: "white",
   });
 
-  const answerYesGreenPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, "Tak", {
+  const answerYesGreenPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, t.tak[lang], {
     maxWidth: 100,
     fontSize: 50 / scale,
     lineHeight: 60 / scale,
@@ -318,7 +282,7 @@ async function createSingleQuestionVideo(
     textColor: "white",
   });
 
-  const answerNoPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, "Nie", {
+  const answerNoPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, t.nie[lang], {
     maxWidth: 100,
     fontSize: 50 / scale,
     lineHeight: 60 / scale,
@@ -327,7 +291,7 @@ async function createSingleQuestionVideo(
     textColor: "white",
   });
 
-  const answerNoGreenPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, "Nie", {
+  const answerNoGreenPngPromise = textToPng_v3(CURRENT_EXAM_SUBFOLDER, t.nie[lang], {
     maxWidth: 100,
     fontSize: 50 / scale,
     lineHeight: 60 / scale,
@@ -604,127 +568,132 @@ async function createSingleQuestionVideo(
   const singleVideoDuration = await getVideoDuration(singleQuestionVideo);
 
   // CREATE SHORT VIDEO
-if (media) {  const bgShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
-    size,
-    blur: 15,
-    crop: 10,
-  });
+  if (media) {
+    const bgShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
+      size,
+      blur: 15,
+      crop: 10,
+    });
 
-  const innerShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
-    size: `${WIDTH / 2}x${HEIGHT / 2}`,
-    blur: 0,
-    crop: 0,
-  });
+    const innerShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
+      size: `${WIDTH / 2}x${HEIGHT / 2}`,
+      blur: 0,
+      crop: 0,
+    });
 
-  const [bg, inner] = await Promise.all([bgShortVideoPromise, innerShortVideoPromise]);
+    const [bg, inner] = await Promise.all([bgShortVideoPromise, innerShortVideoPromise]);
 
-  const videoInVideo = await putVideoOnVideo_v3(CURRENT_EXAM_SUBFOLDER, bg, inner, "videoInVideo");
+    const videoInVideo = await putVideoOnVideo_v3(CURRENT_EXAM_SUBFOLDER, bg, inner, "videoInVideo");
 
-  const videoInVideoVertical = await makeVideoVertical_v3(CURRENT_EXAM_SUBFOLDER, videoInVideo, "videoInVideoVertical");
+    const videoInVideoVertical = await makeVideoVertical_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideo,
+      "videoInVideoVertical"
+    );
 
-  const questionTextMp3Short = remoteFolderWithMp3 + textToSlug160(text) + ".mp3";
+    const questionTextMp3Short = remoteFolderWithMp3 + textToSlug160(text) + ".mp3";
 
-  const videoInVideoVerticalMp3 = await addMp3ToVideo_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    videoInVideoVertical,
-    questionTextMp3Short,
-    "__1 short_with_text_mp3"
-  );
+    const videoInVideoVerticalMp3 = await addMp3ToVideo_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideoVertical,
+      questionTextMp3Short,
+      "__1 short_with_text_mp3"
+    );
 
-  const shortWithAnswer = await addMp3ToVideo_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    videoInVideoVertical,
-    correctAnswerMp3,
-    "__2 short_with_answer_mp3"
-  );
+    const shortWithAnswer = await addMp3ToVideo_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideoVertical,
+      correctAnswerMp3,
+      "__2 short_with_answer_mp3"
+    );
 
-  // SHORT PNGs
-  const [transparentPngShort] = await createTransparentPng(
-    608,
-    HEIGHT,
-    p(CURRENT_EXAM_SUBFOLDER, "__3 transparentShort.png")
-  );
+    // SHORT PNGs
+    const [transparentPngShort] = await createTransparentPng(
+      608,
+      HEIGHT,
+      p(CURRENT_EXAM_SUBFOLDER, "__3 transparentShort.png")
+    );
 
-  const [odwiedzStrone, odwiedzStroneWidth, odwiedzStroneHeight] = await textToPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    "Odwiedź naszą stronę:",
-    { fontSize: 20, bgColor: "transparent" },
-    "__0 odwiedzStrone"
-  );
-  const [poznajTesty, poznajTestyWidth, poznajTestyHeight] = await textToPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    "poznaj-testy.pl",
-    { fontSize: 30, bgColor: "yellow", lineHeight: 40 },
-    "__4 poznajTesty"
-  );
+    const [odwiedzStrone, odwiedzStroneWidth, odwiedzStroneHeight] = await textToPng_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      t.zobaczNaszaStrone[lang],
+      { fontSize: 20, bgColor: "transparent" },
+      "__0 odwiedzStrone"
+    );
+    const [poznajTesty, poznajTestyWidth, poznajTestyHeight] = await textToPng_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      "poznaj-testy.pl",
+      { fontSize: 30, bgColor: "yellow", lineHeight: 40 },
+      "__4 poznajTesty"
+    );
 
-  const [questionTextPNGforShort, questionTextPNGforShortWidth, questionTextPNGforShortHeight] = await textToPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    `${text}`,
-    {
-      maxWidth: 400,
-      fontSize: 20,
-      lineHeight: 30,
-      margin: 10,
-      bgColor: PNG_BG_COLOR,
-      textColor: "white",
-    }
-  );
+    const [questionTextPNGforShort, questionTextPNGforShortWidth, questionTextPNGforShortHeight] = await textToPng_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      `${text}`,
+      {
+        maxWidth: 400,
+        fontSize: 20,
+        lineHeight: 30,
+        margin: 10,
+        bgColor: PNG_BG_COLOR,
+        textColor: "white",
+      }
+    );
 
-  const [png1] = await putPngOnPng_v3(CURRENT_EXAM_SUBFOLDER, odwiedzStrone, transparentPngShort, 50, 50);
-  const [png2] = await putPngOnPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    poznajTesty,
-    png1,
-    50,
-    50 + poznajTestyHeight,
-    "__5 pngShort"
-  );
-  const [png3] = await putPngOnPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    questionTextPNGforShort,
-    png2,
-    50,
-    HEIGHT - questionTextPNGforShortHeight - 300
-  );
+    const [png1] = await putPngOnPng_v3(CURRENT_EXAM_SUBFOLDER, odwiedzStrone, transparentPngShort, 50, 50);
+    const [png2] = await putPngOnPng_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      poznajTesty,
+      png1,
+      50,
+      50 + poznajTestyHeight,
+      "__5 pngShort"
+    );
+    const [png3] = await putPngOnPng_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      questionTextPNGforShort,
+      png2,
+      50,
+      HEIGHT - questionTextPNGforShortHeight - 300
+    );
 
-  const shortWithQuestionAndLogo_variant1 = await putPngOnVideo_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    videoInVideoVerticalMp3,
-    png2,
-    0,
-    0,
-    "__6 short_with_question_and_logo"
-  );
+    const shortWithQuestionAndLogo_variant1 = await putPngOnVideo_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideoVerticalMp3,
+      png2,
+      0,
+      0,
+      "__6 short_with_question_and_logo"
+    );
 
-  const shortWithQuestionAndLogo_variant2 = await putPngOnVideo_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    videoInVideoVerticalMp3,
-    png3,
-    0,
-    0,
-    "__6 short_with_question_and_logo"
-  );
+    const shortWithQuestionAndLogo_variant2 = await putPngOnVideo_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideoVerticalMp3,
+      png3,
+      0,
+      0,
+      "__6 short_with_question_and_logo"
+    );
 
-  const random0_1 = Math.floor(Math.random() * 2);
-  const shortVideo_variant = random0_1 === 0 ? shortWithQuestionAndLogo_variant1 : shortWithQuestionAndLogo_variant2;
+    const random0_1 = Math.floor(Math.random() * 2);
+    const shortVideo_variant = random0_1 === 0 ? shortWithQuestionAndLogo_variant1 : shortWithQuestionAndLogo_variant2;
 
-  const shortWithAnswerAndLogo = await putPngOnVideo_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    shortWithAnswer,
-    png2,
-    0,
-    0,
-    "__7 short_with_answer_and_logo"
-  );
+    const shortWithAnswerAndLogo = await putPngOnVideo_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      shortWithAnswer,
+      png2,
+      0,
+      0,
+      "__7 short_with_answer_and_logo"
+    );
 
-  const safeFileNameWithId = safeFileName(`${text} ${id}`);
-  const shortWithQuestionAndAnswer = await mergeVideos_v2(
-    [shortVideo_variant, shortWithAnswerAndLogo],
-    p(CURRENT_EXAM_SUBFOLDER, `__8 ${safeFileNameWithId}.mp4`)
-  );
+    const safeFileNameWithId = safeFileName(`${text} ${id}`);
+    const shortWithQuestionAndAnswer = await mergeVideos_v2(
+      [shortVideo_variant, shortWithAnswerAndLogo],
+      p(CURRENT_EXAM_SUBFOLDER, `__8 ${safeFileNameWithId}.mp4`)
+    );
 
-  copyFileSync(shortWithQuestionAndAnswer, p(PRODUCED_FOLDER, "_shorts", `${safeFileNameWithId}.mp4`));
-}
+    copyFileSync(shortWithQuestionAndAnswer, p(PRODUCED_FOLDER, "_shorts", `${safeFileNameWithId}.mp4`));
+  }
   return { video: singleQuestion, text, duration: singleVideoDuration };
 }

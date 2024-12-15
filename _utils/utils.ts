@@ -320,18 +320,6 @@ export const createVerticalChunksWithDurationLimit = async (
   maxShortDuration: number,
   text: string
 ) => {
-  // const textOptions = {
-  //   // fontfile: "path/to/font.ttf",
-  //   fontsize: 80,
-  //   fontcolor: "red",
-  //   x: "(main_w/2-text_w/2)",
-  //   y: "1250",
-  //   shadowcolor: "black",
-  //   shadowx: 2,
-  //   shadowy: 2,
-  //   // encoding: "utf8",
-  // };
-
   const textFilter = {
     filter: "drawtext",
     options: {
@@ -364,12 +352,9 @@ export const createVerticalChunksWithDurationLimit = async (
 
   const shortsPerChunk = Math.floor(duration / maxShortDuration) || 1;
 
-  log(111111111, { duration, shortsPerChunk });
-
   for (let i = 0; i < shortsPerChunk; i++) {
     const maxDuration = shortsPerChunk === 1 ? duration : maxShortDuration;
 
-    log(222222222, { i, maxDuration });
     const [_1a, _2a] = await Promise.all([
       manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...smallSize }),
       manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...bigSize, blur: 7 }),

@@ -101,6 +101,22 @@ const createExam: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const createExamEn: Job = {
+  TYPE: "CREATE_EXAM_EN",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "testy-egzamin-en"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 const videosWithAnyDrivingQuestions: Job = {
   TYPE: "MAKE_VIDEO_WITH_ANY_DRIVING_QUESTIONS",
   ORIENTATION: "VERTICAL",
@@ -342,6 +358,7 @@ export const ALL_JOBS: Job[] = [
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
   { ...createExam, EXECUTE: true },
+  { ...createExamEn, EXECUTE: false },
 
   // FILMY ROWEROWE
   { ...rower_przyspieszone_wideo_z_gadaniem, EXECUTE: false },
