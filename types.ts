@@ -80,3 +80,8 @@ export interface ChunkFromVideo {
   words: any[];
   timestampsForYt: string[];
 }
+
+export interface TextAndMediaInExam {
+  myText: string;
+  media: string;
+}

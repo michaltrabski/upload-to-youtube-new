@@ -1,3 +1,17 @@
+export const r = (strArr: string[]) => {
+  // return random element from array
+  return strArr[Math.floor(Math.random() * strArr.length)];
+};
+
+export const rozpoczynamyEgzamin = [
+  "Rozpoczynamy egzamin na prawo jazdy!",
+  "Rozwiążmy sobie teraz egzamin na prawo jazdy!",
+  "Rozpoczynamy egzamin na prawo jazdy!",
+  "Wykonam egzamin na prawo jazdy kategorii B",
+];
+
+export const rozpocznijEgzaminMp4 = ["rozpocznijEgzamin1.mp4", "rozpocznijEgzamin2.mp4"];
+
 export const t = {
   zapraszamNaEgzaminPoAngielsku: {
     pl: "W tym wideo przedstawiamy egzamin teoretyczny na prawo jazdy w języku angielskim!",

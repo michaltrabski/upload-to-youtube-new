@@ -5,6 +5,7 @@ import { Job } from "../types";
 import {
   convertSecondsToYtTimestamp,
   createScreenshot,
+  downloadMp3,
   downloadVideo,
   f,
   log,
@@ -58,13 +59,19 @@ export async function createSingleTextVideo(
     return { video: singleTextVideoFullPath, text, duration: singleTextVideoDuration };
   }
 
-  const singleTextMp3 = remoteFolderWithMp3 + textToSlug160(text) + ".mp3";
+  const silentMp3 = p(__dirname, "../", "../", "_silent_mp3", "1000.mp3");
+  const singleTextMp3FileName = textToSlug160(text) + ".mp3";
+  const singleTextMp3 = await downloadMp3(
+    remoteFolderWithMp3 + singleTextMp3FileName,
+    p(CURRENT_EXAM_SUBFOLDER, singleTextMp3FileName),
+    silentMp3
+  );
 
   const isVideo = media.includes(".mp4");
 
   const sourceMediaRemote = remoteFolderWithMp4 + media;
-  console.log("sourceMedia", { sourceMediaRemote, CURRENT_EXAM_SUBFOLDER });
-  const sourceMedia = await downloadVideo(sourceMediaRemote, p(CURRENT_EXAM_SUBFOLDER, media));
+  const silentMp4 = p(__dirname, "../", "../", "_silent_mp3", "1000.mp4");
+  const sourceMedia = await downloadVideo(sourceMediaRemote, p(CURRENT_EXAM_SUBFOLDER, media), silentMp4);
 
   if (!existsSync(sourceMedia)) {
     log("sourceMedia not exist", sourceMedia);

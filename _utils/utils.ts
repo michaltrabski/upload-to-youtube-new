@@ -374,26 +374,57 @@ export const createVerticalChunksWithDurationLimit = async (
   }
 };
 
-export const downloadVideo = async (url: string, outputPath: string): Promise<string> => {
+export const downloadVideo = async (url: string, outputPath: string, defaultMp4: string): Promise<string> => {
   if (existsSync(outputPath)) {
-    console.log(`Video already exists at ${outputPath}`);
+    console.log(`Mp4 already exists at ${outputPath}`);
     return outputPath;
   }
 
+  console.log(`Downloading mp4 from ${url}`);
   try {
-    // Fetch the video data from the remote URL
     const response = await axios.get(url, { responseType: "arraybuffer" });
 
-    // Write the video data to the file
+    if (response.status !== 200) {
+      console.log(`Failed to download mp3 from ${url}`);
+      return defaultMp4;
+    }
+
+    console.log(`Saving mp3 to ${outputPath}`);
     writeFileSync(outputPath, response.data);
 
-    console.log(`Video downloaded successfully to ${outputPath}`);
+    console.log(`Mp3 downloaded successfully to ${outputPath}`);
 
-    // Return the full path of the downloaded file
     return outputPath;
   } catch (error) {
-    console.error("Error downloading the video:", error);
-    throw error;
+    console.log(`Failed to download mp3 from ${url}`, error);
+    return defaultMp4;
+  }
+};
+
+export const downloadMp3 = async (url: string, outputPath: string, defaultMp3: string): Promise<string> => {
+  if (existsSync(outputPath)) {
+    console.log(`Mp3 already exists at ${outputPath}`);
+    return outputPath;
+  }
+
+  console.log(`Downloading mp3 from ${url}`);
+  try {
+    const response = await axios.get(url, { responseType: "arraybuffer" });
+
+    if (response.status !== 200) {
+      console.log(`Failed to download mp3 from ${url}`);
+      return defaultMp3;
+    }
+
+    console.log(`Saving mp3 to ${outputPath}`);
+    writeFileSync(outputPath, response.data);
+
+    console.log(`Mp3 downloaded successfully to ${outputPath}`);
+
+    return outputPath;
+  } catch (error) {
+    console.log(`Failed to download mp3 from ${url}`, error);
+    return defaultMp3;
   }
 };
 

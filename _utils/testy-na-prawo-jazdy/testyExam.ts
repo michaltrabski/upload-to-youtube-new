@@ -1,4 +1,12 @@
-import { copyFileSync, ensureDirSync, existsSync, readFileSync, writeFileSync } from "fs-extra";
+import {
+  copyFileSync,
+  ensureDirSync,
+  existsSync,
+  readFileSync,
+  readJsonSync,
+  writeFileSync,
+  writeJsonSync,
+} from "fs-extra";
 const sharp = require("sharp");
 import { getVideoDuration, mergeVideos } from "../ffmpeg";
 import { Job } from "../types";
@@ -19,34 +27,43 @@ import {
 } from "../ffmpeg-v3";
 import { t } from "./translations";
 import { createSingleTextVideo } from "./createSingleTextVideo";
+import { TextAndMediaInExam } from "../../types";
 
 type Lang = "pl" | "en" | "de";
 
-export const createExam = async (job: Job, examIndex: number, exams: ExamData[], lang: Lang): Promise<number> => {
+export const createExam = async (
+  job: Job,
+  examIndex: number,
+  exams: ExamData[],
+  lang: Lang,
+  textsAndMediaBeforeExam: TextAndMediaInExam[],
+  textsAndMediaAfterExam: TextAndMediaInExam[]
+): Promise<number> => {
+  // const scale = 1;
+  // const WIDTH = 1920 / scale;
+  // const HEIGHT = 1080 / scale;
+  // const VIDEO_DURATION_LIMIT = 99999999;
+  // const GAP = 20;
+  // const PNG_BG_COLOR = "rgb(71 85 105)";
+  // const PNG_BG_COLOR_GREEN = "#15803d";
+  // const START_INDEX = 0;
+  // const LIMIT = 99999999;
+
   const scale = 1;
   const WIDTH = 1920 / scale;
   const HEIGHT = 1080 / scale;
-  const VIDEO_DURATION_LIMIT = 99999999;
+  const VIDEO_DURATION_LIMIT = 199999;
   const GAP = 20;
   const PNG_BG_COLOR = "rgb(71 85 105)";
   const PNG_BG_COLOR_GREEN = "#15803d";
   const START_INDEX = 0;
-  const LIMIT = 99999999;
-
-  // const scale = 1;
-  // const WIDTH = 1920 / scale;
-  // const HEIGHT = 1080 / scale;
-  // const VIDEO_DURATION_LIMIT = 199999;
-  // const GAP = 20;
-  // const PNG_BG_COLOR = "rgb(71 85 105)";
-  // const PNG_BG_COLOR_GREEN = "#15803d";
-  // const START_INDEX = 1;
-  // const LIMIT = 2;
+  const LIMIT = 2;
 
   const currentExam = exams[examIndex];
   const { examQuestions32, examSlug } = currentExam;
 
-  const examQuestions32Limited = examQuestions32.slice(START_INDEX, LIMIT);
+  const examQuestions32Limited = examQuestions32.slice(START_INDEX, START_INDEX + LIMIT);
+  log("examQuestions32Limited.lengt", examQuestions32Limited.length);
 
   const { BASE_DIR, BASE_FOLDER } = job;
   const pb = (path: string) => p(BASE_FOLDER, path);
@@ -76,38 +93,32 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[],
   const texts: string[] = [];
   const durations: number[] = [];
 
-  // const textsAndMedia = [
-  //   { myText: t.zapraszamNaEgzaminPoAngielsku[lang], media: "IMG_7431aorgbm.png" },
-  //   { myText: t.wiecejFilmowAngielskichNaInnymKanale[lang], media: "IMG_9330orgbm.png" },
-  //   { myText: t.linkDoKanalu[lang], media: "IMG_4011org.png" },
-  // ];
+  for (const { myText, media } of textsAndMediaBeforeExam) {
+    const { video, text, duration } = await createSingleTextVideo(
+      CURRENT_EXAM_SUBFOLDER,
+      myText, // to przykładowy text
+      media,
+      "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/",
+      blankPng,
+      mp4_1000,
+      WIDTH,
+      HEIGHT,
+      GAP,
+      PNG_BG_COLOR,
+      PNG_BG_COLOR_GREEN,
+      scale,
+      size,
+      remoteFolderWithMp3,
+      mp3_1000,
+      VIDEO_DURATION_LIMIT,
+      PRODUCED_FOLDER,
+      lang
+    );
 
-  // for (const { myText, media } of textsAndMedia) {
-  //   const { video, text, duration } = await createSingleTextVideo(
-  //     CURRENT_EXAM_SUBFOLDER,
-  //     myText, // to przykładowy text
-  //     media,
-  //     "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/",
-  //     blankPng,
-  //     mp4_1000,
-  //     WIDTH,
-  //     HEIGHT,
-  //     GAP,
-  //     PNG_BG_COLOR,
-  //     PNG_BG_COLOR_GREEN,
-  //     scale,
-  //     size,
-  //     remoteFolderWithMp3,
-  //     mp3_1000,
-  //     VIDEO_DURATION_LIMIT,
-  //     PRODUCED_FOLDER,
-  //     lang
-  //   );
-
-  //   videos.push(video);
-  //   texts.push(text);
-  //   durations.push(duration);
-  // }
+    videos.push(video);
+    texts.push(text);
+    durations.push(duration);
+  }
 
   for (const drivingQuestion of examQuestions32Limited) {
     i++;
@@ -138,6 +149,33 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[],
     durations.push(duration);
 
     copyFileSync(video, p(PRODUCED_FOLDER, f(video).nameWithExt));
+  }
+
+  for (const { myText, media } of textsAndMediaAfterExam) {
+    const { video, text, duration } = await createSingleTextVideo(
+      CURRENT_EXAM_SUBFOLDER,
+      myText, // to przykładowy text
+      media,
+      "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/",
+      blankPng,
+      mp4_1000,
+      WIDTH,
+      HEIGHT,
+      GAP,
+      PNG_BG_COLOR,
+      PNG_BG_COLOR_GREEN,
+      scale,
+      size,
+      remoteFolderWithMp3,
+      mp3_1000,
+      VIDEO_DURATION_LIMIT,
+      PRODUCED_FOLDER,
+      lang
+    );
+
+    videos.push(video);
+    texts.push(text);
+    durations.push(duration);
   }
 
   const timestampsArr = texts.map((text, i) => ({
@@ -595,7 +633,9 @@ async function createSingleQuestionVideo(
   const singleVideoDuration = await getVideoDuration(singleQuestionVideo);
 
   // CREATE SHORT VIDEO
-  if (media) {
+  const createdShortsIdsFile = p(__dirname, "createdShortsIds.json");
+  const createdShortsIds = readJsonSync(createdShortsIdsFile);
+  if (media && !createdShortsIds[lang].includes(id)) {
     const bgShortVideoPromise = manipulateVideo_v3(CURRENT_EXAM_SUBFOLDER, baseVideo, 0, VIDEO_DURATION_LIMIT, {
       size,
       blur: 15,
@@ -720,7 +760,15 @@ async function createSingleQuestionVideo(
       p(CURRENT_EXAM_SUBFOLDER, `__8 ${safeFileNameWithId}.mp4`)
     );
 
+    // safe short's id to array to avoid duplicates
+    writeJsonSync(
+      createdShortsIdsFile,
+      { ...createdShortsIds, [lang]: [...createdShortsIds[lang], id] },
+      { spaces: 2 }
+    );
+
     copyFileSync(shortWithQuestionAndAnswer, p(PRODUCED_FOLDER, "_shorts", `${safeFileNameWithId}.mp4`));
   }
+
   return { video: singleQuestion, text, duration: singleVideoDuration };
 }

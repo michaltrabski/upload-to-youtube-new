@@ -18,7 +18,7 @@ import {
 import path from "path";
 import { getSilentParts } from "@remotion/renderer";
 
-import { ChunkFromVideo, TranscriptionFormDeepgram, VideoChunk } from "./types";
+import { ChunkFromVideo, TextAndMediaInExam, TranscriptionFormDeepgram, VideoChunk } from "./types";
 import {
   createHtmlPreview,
   createScreenshot,
@@ -68,6 +68,7 @@ import {
 } from "./_utils/ffmpeg-for-rowery-v1";
 import { askChatGpt } from "./_utils/gpt";
 import { manipulateVideo_v3, putVideoOnVideo_v3 } from "./_utils/ffmpeg-v3";
+import { r, rozpocznijEgzaminMp4, rozpoczynamyEgzamin, t } from "./_utils/testy-na-prawo-jazdy/translations";
 
 require("dotenv").config();
 
@@ -220,8 +221,17 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM") {
-      const COUNT = 10;
-      const FILE_WITH_DATA = "examDataObj4_30_difficultExams_b.json";
+      const COUNT = 5;
+      const LANG = "pl";
+      const FILE_WITH_DATA = "examDataObj30_difficultExams_b_1.json";
+
+      const textsAndMediaBeforeExam: TextAndMediaInExam[] = [
+        { myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) },
+      ];
+
+      const textsAndMediaAfterExam: TextAndMediaInExam[] = [
+        { myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) },
+      ];
 
       for (let counter of [...Array(COUNT).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
@@ -229,7 +239,14 @@ async function main() {
         );
 
         try {
-          await createExam(job, 0, exams_b_random.exams, "pl");
+          await createExam(
+            job,
+            0,
+            exams_b_random.exams,
+            LANG,
+            [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }],
+            [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }]
+          );
         } catch (error) {
           console.log("createExam error", error);
         }
@@ -244,8 +261,8 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM_EN") {
-      const COUNT_EN = 5;
-      const FILE_WITH_DATA_EN = "examDataObj1_30_difficultExams_b_en.json";
+      const COUNT_EN = 1;
+      const FILE_WITH_DATA_EN = "examDataObj30_difficultExams_b_en_1.json";
 
       for (let counter of [...Array(COUNT_EN).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
@@ -253,17 +270,17 @@ async function main() {
         );
 
         try {
-          await createExam(job, 0, exams_b_random.exams, "en");
+          await createExam(job, 0, exams_b_random.exams, "en", [], []);
         } catch (error) {
           console.log("createExam error", error);
         }
 
         const exams_b_random_after = exams_b_random.exams.filter((_, index) => ![0].includes(index));
-        writeJsonSync(
-          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA_EN),
-          { exams: exams_b_random_after },
-          { spaces: 2 }
-        );
+        // writeJsonSync(
+        //   p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA_EN),
+        //   { exams: exams_b_random_after },
+        //   { spaces: 2 }
+        // );
       }
     }
 

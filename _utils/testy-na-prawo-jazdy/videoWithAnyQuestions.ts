@@ -95,7 +95,7 @@ export const createVideoWithAnyExamQuestions = async (
   const mp4_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp4");
   const blankPng = p(BASE_DIR, "_silent_mp3", "blank.png");
 
-  const downloadedIntroVideo = await downloadVideo(introVideoUrl, pb("introVideo.mp4"));
+  const downloadedIntroVideo = await downloadVideo(introVideoUrl, pb("introVideo.mp4"), mp4_1000);
 
   const introVideo = await manipulateVideo_v2(downloadedIntroVideo, 0, VIDEO_DURATION_LIMIT, {
     size,

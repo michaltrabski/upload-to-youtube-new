@@ -363,7 +363,7 @@ export const ALL_JOBS: Job[] = [
   // NAUKA JAZDY
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
-  { ...createExam, EXECUTE: false },
+  { ...createExam, EXECUTE: true },
   { ...createExamEn, EXECUTE: false },
 
   // FILMY ROWEROWE
