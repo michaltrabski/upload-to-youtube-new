@@ -81,7 +81,6 @@ export interface QuestionBigObj {
 export interface QuestionSmall {
   slug: string;
   isActive: boolean;
-
   id: string;
   text: string;
   a: string;

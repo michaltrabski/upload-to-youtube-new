@@ -13,10 +13,10 @@ const PREVENT_OVERRIDE = true;
 const LOG = true;
 
 function log(...args: any[]) {
-  if (LOG) console.log("old FFMPEG", ...args);
+  if (LOG) console.log(...args);
 }
 
-export function createVideoForRovery_v1(
+export function createVideoForRowery_v1(
   job: Job,
   originalVideoPath: string,
   producedVideoPath: string,
@@ -40,11 +40,11 @@ export function createVideoForRovery_v1(
     const from = originalVideoTrimFrom;
     const to = originalVideoTrimTo;
 
-    const SIZE = `${40}x?`;
+    // const SIZE = `${500}x?`;
     log(
-      "createVideoForRovery_v1",
+      "createVideoForRowery_v1\n",
       producedVideoPath,
-      `produced video duration will be ${Math.floor(to - from)} seconds`
+      `\nproduced video duration will be ${Math.floor(to - from)} seconds`
     );
 
     let newFlip: any = [];
@@ -58,20 +58,11 @@ export function createVideoForRovery_v1(
         .input(originalVideoPath)
         .setStartTime(originalVideoTrimFrom)
         .setDuration(originalVideoTrimTo - originalVideoTrimFrom)
-        // .fps(29.97)
         .videoFilters(newFlip)
         .output(producedVideoPathTemp)
         .on("end", () => {
-          console.log("end", 1);
-          setTimeout(() => {
-            console.log("end", 2);
-            renameSync(producedVideoPathTemp, producedVideoPath);
-            console.log("end", 3);
-            setTimeout(() => {
-              console.log("end", 4);
-              resolve(producedVideoPath);
-            }, 2222);
-          }, 2222);
+          renameSync(producedVideoPathTemp, producedVideoPath);
+          resolve(producedVideoPath);
         })
         .on("progress", (progress: any) => {
           const newPercent = Math.floor(progress.percent);
@@ -114,13 +105,6 @@ export function createVideoForRovery_v1(
         })
         .on("error", (err: any) => reject(err))
         // .fps(29.97)
-        // .outputOptions("-c:v", "libx264") // Use H.264 codec for video
-        // .videoCodec("libx264")
-        // .videoBitrate(1000)
-        // .noAudio()
-        // .videoFilters("fade=in:0:30")
-        // .videoFilters("fade=in:0:30", "pad=640:480:0:40:violet")
-        // .size(SIZE) // michal
         .videoFilter("crop=ih*9/16:ih:(iw-ow)/2:(ih-oh)/2")
         .run();
     }
@@ -225,11 +209,19 @@ export function putVideoOnVideoForRovery_v1(
         ffmpeg()
           .input(originalVideo1Path)
           .input(originalVideo2Path)
-          // .fps(29.97)
+          // Apply overlay filter
+          // .complexFilter([
+          //   "[0:v] [1:v] overlay=x=0:y=0:enable='between(t,0,4)'[v]", // Overlay video2 on video1 for the first 4 seconds
+          // ])
+          // .complexFilter([
+          //   "[0:v] [1:v] overlay=x=0:y=0:enable='between(t,5,9)'[v]", // Overlay video2 on video1 from 5 to 9 seconds
+          // ])
           .complexFilter([
-            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,1,3)'`,
-            // `[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,20)'`,
-            // "[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", // this line produce error because of audio in videos
+            "[0:v] [1:v] overlay=x=0:y=0:enable='between(t,5,inf)'[v]", // Overlay video2 on video1 from 5 seconds onwards
+          ])
+          .outputOptions([
+            "-map [v]", // Map the output to the filtered video stream
+            "-map 0:a", // Map the audio from the first video
           ])
           .output(producedVideoPathTemp)
           .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))

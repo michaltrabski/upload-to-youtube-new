@@ -1,9 +1,6 @@
-import path from "path";
 import ffmpeg from "fluent-ffmpeg";
-const sharp = require("sharp");
-import { exec } from "child_process";
-const { getVideoDurationInSeconds } = require("get-video-duration");
 import md5 from "md5";
+
 const sizeOf = require("image-size");
 const textToImage = require("text-to-image");
 const Jimp = require("jimp");
@@ -11,6 +8,7 @@ const Jimp = require("jimp");
 import fs, { copyFileSync, copySync, exists, existsSync, renameSync } from "fs-extra";
 import { ManipulateVideoOptions, Job } from "./types";
 import { f, p } from "./utils";
+import { getVideoDurationInMiliseconds } from "./ffmpeg";
 
 const PREVENT_OVERRIDE = true;
 const LOG = false;
@@ -85,14 +83,23 @@ export const putPngOnPng_v3 = async (
     foregroundImage.getHeight() > backgroundImage.getHeight()
   ) {
     throw new Error(
-      `putPngOnPng_v3 Foreground image exceeds background dimensions. ${JSON.stringify({
-        baseFolder,
-        foregroundPath,
-        backgroundPath,
-        x,
-        y,
-        prefix,
-      })}`
+      `putPngOnPng_v3 Foreground image exceeds background dimensions.
+      ${JSON.stringify(
+        {
+          baseFolder,
+          foregroundPath,
+          backgroundPath,
+          x,
+          y,
+          prefix,
+          foregroundImageWidth: foregroundImage.getWidth(),
+          foregroundImageHeight: foregroundImage.getHeight(),
+          backgroundImageWidth: backgroundImage.getWidth(),
+          backgroundImageHeight: backgroundImage.getHeight(),
+        },
+        null,
+        2
+      )}`
     );
   }
 
@@ -125,17 +132,17 @@ export const putPngOnVideo_v3 = async (
 
     const procucedFileLocation = p(baseFolder, `${outputName}.mp4`);
 
-    // if (prefix) {
-    //   console.log({
-    //     baseFolder,
-    //     videoPath,
-    //     pngPath,
-    //     x,
-    //     y,
-    //     prefix,
-    //     procucedFileLocation,
-    //   });
-    // }
+    if (prefix) {
+      console.log({
+        baseFolder,
+        videoPath,
+        pngPath,
+        x,
+        y,
+        prefix,
+        procucedFileLocation,
+      });
+    }
 
     if (procucedFileLocation.includes("aaaaaaaaa_final_short")) {
       throw new Error(`procucedFileLocation contains spaces: ${procucedFileLocation}`);
@@ -154,7 +161,7 @@ export const putPngOnVideo_v3 = async (
     ffmpeg()
       .input(videoPath)
       .input(pngPath)
-      .fps(29.97)
+      // .fps(29.97)
       .complexFilter([
         {
           filter: "overlay",
@@ -194,36 +201,43 @@ export const addMp3ToVideo_v3 = async (
 
     const producedVideoPathTemp = p(f(procucedFileLocation).path, `x__temp_${Math.random()}.mp4`);
 
-    ffmpeg()
-      .input(videoPath)
-      .input(mp3)
-      .fps(29.97)
-      .complexFilter([
-        "[0:v]copy[v]", // Example of applying a scale filter instead of copy
-        "[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a]", // Convert the audio stream to a compatible format
-      ])
-      .outputOptions([
-        "-map [v]", // Map the video stream from the complex filter
-        "-map [a]", // Map the audio stream from the complex filter
-        "-c:v libx264", // Specify the video codec (re-encode with H.264)
-        "-crf 23", // Specify the Constant Rate Factor (quality level) for H.264, where lower values mean better quality
-        "-c:a aac", // Use AAC codec for audio
-      ])
-      .output(producedVideoPathTemp)
-      .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
-      .on("end", () => {
-        renameSync(producedVideoPathTemp, procucedFileLocation);
-        resolve(procucedFileLocation);
-      })
-      .on("error", (err: any) => reject(err))
-      .run();
+    console.log({
+      videoPath,
+      mp3,
+    });
+    try {
+      ffmpeg()
+        .input(videoPath)
+        .input(mp3)
+        .fps(29.97)
+        .complexFilter([
+          "[0:v]copy[v]", // Example of applying a scale filter instead of copy
+          "[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a]", // Convert the audio stream to a compatible format
+        ])
+        .outputOptions([
+          "-map [v]", // Map the video stream from the complex filter
+          "-map [a]", // Map the audio stream from the complex filter
+          "-c:v libx264", // Specify the video codec (re-encode with H.264)
+          "-crf 23", // Specify the Constant Rate Factor (quality level) for H.264, where lower values mean better quality
+          "-c:a aac", // Use AAC codec for audio
+        ])
+        .output(producedVideoPathTemp)
+        .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+        .on("end", () => {
+          renameSync(producedVideoPathTemp, procucedFileLocation);
+          resolve(procucedFileLocation);
+        })
+        .on("error", (err: any) => reject(err))
+        .run();
+    } catch (err) {
+      console.error(1111111111111111);
+    }
   });
 };
 
 export async function manipulateVideo_v3(
   baseFolder: string,
   originalVideoPath: string,
-  // producedVideoPath: string,
   originalVideoTrimFrom: number,
   originalVideoTrimTo: number,
   options: ManipulateVideoOptions
@@ -272,6 +286,10 @@ export async function manipulateVideo_v3(
     if (options.scale) {
       command.size(`${options.scale}%`);
     }
+
+    // remove audio
+
+    command.noAudio();
 
     if (options.crop && options.crop > 0) {
       ffmpeg.ffprobe(originalVideoPath, function (err, metadata) {
@@ -444,7 +462,7 @@ export function putVideoOnVideo_v3(
           .input(originalVideo2Path)
           .fps(29.97)
           .complexFilter([
-            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,0,20)'`,
+            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,3,7)'`,
             // `[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,20)'`,
             // "[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", // this line produce error because of audio in videos
           ])
@@ -493,6 +511,46 @@ export async function makeVideoVertical_v3(
       .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
       .videoFilter("crop=ih*9/16:ih:(iw-ow)/2:(ih-oh)/2")
       // .videoCodec("libx265") // specify the H.265 codec here
+      .run();
+  });
+}
+
+export async function trimVideo_v3(
+  baseFolder: string,
+  originalVideoPath: string,
+  trimSecondsFromStart: number,
+  trimSecondsToEnd: number,
+  prefix = ""
+): Promise<string> {
+  const outputName =
+    `${prefix}_` +
+    md5(JSON.stringify({ baseFolder, originalVideoPath, trimSecondsFromStart, trimSecondsToEnd, prefix })).slice(0, 11);
+
+  const producedVideoPath = p(baseFolder, `${outputName}.mp4`);
+
+  if (PREVENT_OVERRIDE) {
+    if (existsSync(producedVideoPath)) {
+      log(`\n trimVideo() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
+      return producedVideoPath;
+    }
+  }
+
+  const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
+  const durationMs = await getVideoDurationInMiliseconds(originalVideoPath);
+  const duration = durationMs / 1000;
+
+  return new Promise((resolve, reject) => {
+    ffmpeg()
+      .input(originalVideoPath)
+      .setStartTime(trimSecondsFromStart)
+      .setDuration(duration - trimSecondsToEnd - trimSecondsFromStart)
+      .output(producedVideoPathTemp)
+      .on("end", () => {
+        renameSync(producedVideoPathTemp, producedVideoPath);
+        resolve(producedVideoPath);
+      })
+      .on("error", (err: any) => reject(err))
+      .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
       .run();
   });
 }

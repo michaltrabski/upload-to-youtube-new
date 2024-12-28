@@ -1,4 +1,19 @@
 export const t = {
+  zapraszamNaEgzaminPoAngielsku: {
+    pl: "W tym wideo przedstawiamy egzamin teoretyczny na prawo jazdy w języku angielskim!",
+    en: "W tym wideo przedstawiamy egzamin teoretyczny na prawo jazdy w języku angielskim!",
+    de: "In diesem Video zeigen wir den theoretischen Fahrenschein-Test in Englisch an!",
+  },
+  wiecejFilmowAngielskichNaInnymKanale: {
+    pl: "Wiecej filmów po angielsku na moim drugim kanale!",
+    en: "Wiecej filmów po angielsku na moim drugim kanale!",
+    de: "Mehr Videos in Englisch auf meinem zweiten Kanal!",
+  },
+  linkDoKanalu: {
+    pl: "Link zamieszczam w opisie filmu!",
+    en: "Link zamieszczam w opisie filmu!",
+    de: "Der Link steht in der Video-Beschreibung!",
+  },
   zobaczNaszaStrone: {
     pl: "Zobacz naszą stronę!",
     en: "Visit our website!",

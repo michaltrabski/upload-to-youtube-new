@@ -22,6 +22,7 @@ import {
   putVideoOnVideo_v2,
 } from "./ffmpeg-v2";
 import axios from "axios";
+import { manipulateVideo_v3 } from "./ffmpeg-v3";
 
 export const p = path.resolve;
 export const log = console.log;
@@ -344,22 +345,21 @@ export const createVerticalChunksWithDurationLimit = async (
 
   const smallSize = { size: `${ytRecomendedWidth}x${relativeHeight}` };
   const bigSize = { size: `${Math.round(1920 * (16 / 9))}x1920` };
-  log("getVideoDimensions", { w, h, smallSize });
 
   const horizontalBaseChunk = originalVideoPath;
   const duration = await getVideoDuration(horizontalBaseChunk);
-  console.log("createVerticalChunksShorterThan1Min() =>", { duration });
+  console.log("createVerticalChunksShorterThan1Min() =>", { originalVideoPath, duration, w, h, smallSize });
 
   const shortsPerChunk = Math.floor(duration / maxShortDuration) || 1;
 
   for (let i = 0; i < shortsPerChunk; i++) {
     const maxDuration = shortsPerChunk === 1 ? duration : maxShortDuration;
 
-    const [_1a, _2a] = await Promise.all([
-      manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...smallSize }),
-      manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...bigSize, blur: 7 }),
-    ]);
-
+    const _1a = await manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), { ...smallSize });
+    const _2a = await manipulateVideo_v2(horizontalBaseChunk, maxDuration * i, maxDuration * (i + 1), {
+      ...bigSize,
+      blur: 7,
+    });
     const _3a = await putVideoOnVideo_v2(_2a, _1a);
     const _4a = await createVideo_v2(job, _3a, 0, 99999999, "VERTICAL", textFilter);
     const final_a = p(f(producedChunkPathVertical).path, f(producedChunkPathVertical).name + `_${i}.mp4`);
@@ -396,3 +396,30 @@ export const downloadVideo = async (url: string, outputPath: string): Promise<st
     throw error;
   }
 };
+
+export async function getExtraContent(job: Job) {
+  const folder = job.BASE_FOLDER + "_EXTRA_CONTENT";
+
+  ensureDirSync(folder);
+
+  const files = readdirSync(folder)
+    .filter((fileName) => fileName.includes("x__temp"))
+    .map((fileName) => p(folder, fileName));
+
+  const f1 = await manipulateVideo_v3(folder, files[0], 30, 34, { size: "400x?" });
+
+  return files;
+
+  // files.forEach((itemInVideoFolder) => {
+  //   const isItemADirectory = statSync(p(folder, itemInVideoFolder)).isDirectory();
+
+  //   if (isItemADirectory) {
+  //     return;
+  //   }
+
+  //   if (!itemInVideoFolder.endsWith(".mp4") && !itemInVideoFolder.endsWith(".MP4")) {
+  //     return;
+  //   }
+
+  // });
+}

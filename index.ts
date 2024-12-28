@@ -25,6 +25,7 @@ import {
   createVerticalChunksWithDurationLimit,
   f,
   getEnv,
+  getExtraContent,
   log,
   p,
   recreateDirSync,
@@ -61,11 +62,12 @@ import { ExamDataObj } from "./_utils/testy-na-prawo-jazdy/data/types";
 import { generateImages } from "./_utils/generateImages";
 import { putTextOnPng } from "./_utils/jimp_v2";
 import {
-  createVideoForRovery_v1,
+  createVideoForRowery_v1,
   overlayVideosForRovery_v1,
   putVideoOnVideoForRovery_v1,
 } from "./_utils/ffmpeg-for-rowery-v1";
 import { askChatGpt } from "./_utils/gpt";
+import { manipulateVideo_v3, putVideoOnVideo_v3 } from "./_utils/ffmpeg-v3";
 
 require("dotenv").config();
 
@@ -110,10 +112,13 @@ async function main() {
     if (TYPE === "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM") {
       ensureDir(job.BASE_FOLDER);
       ensureDir(`${job.BASE_FOLDER}_PRODUCED`);
+
+      // const files = getExtraContent(job);
+
       await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
       const allVideosHorizontal = await createAllVideosData(job);
 
-      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal, "pl");
 
       if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
         await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
@@ -130,7 +135,7 @@ async function main() {
       await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
       const allVideosHorizontal = await createAllVideosData(job);
 
-      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal, "pl");
 
       if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
         await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
@@ -149,7 +154,7 @@ async function main() {
       await moveMp4VideosToFoldersWithTheSameName(job.BASE_FOLDER);
       const allVideosHorizontal = await createAllVideosData(job);
 
-      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal);
+      await mergeTranscriptFromAllChunksFromAllVideos(job, allVideosHorizontal, "pl");
 
       if (job.MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS) {
         await mergeAllVerticalChunksFromAllVideos(job, allVideosHorizontal);
@@ -215,11 +220,12 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM") {
-      const EXAM_DATA_JSON = "examDataObj3_30_difficultExams_b.json";
+      const COUNT = 10;
+      const FILE_WITH_DATA = "examDataObj4_30_difficultExams_b.json";
 
-      for (let counter of [...Array(10).keys()]) {
+      for (let counter of [...Array(COUNT).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
-          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON)
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA)
         );
 
         try {
@@ -230,7 +236,7 @@ async function main() {
 
         const exams_b_random_after = exams_b_random.exams.filter((_, index) => ![0].includes(index));
         writeJsonSync(
-          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON),
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA),
           { exams: exams_b_random_after },
           { spaces: 2 }
         );
@@ -238,11 +244,12 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM_EN") {
-      const EXAM_DATA_JSON = "examDataObj1_30_difficultExams_b_en.json";
+      const COUNT_EN = 5;
+      const FILE_WITH_DATA_EN = "examDataObj1_30_difficultExams_b_en.json";
 
-      for (let counter of [...Array(10).keys()]) {
+      for (let counter of [...Array(COUNT_EN).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
-          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON)
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA_EN)
         );
 
         try {
@@ -253,7 +260,7 @@ async function main() {
 
         const exams_b_random_after = exams_b_random.exams.filter((_, index) => ![0].includes(index));
         writeJsonSync(
-          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", EXAM_DATA_JSON),
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA_EN),
           { exams: exams_b_random_after },
           { spaces: 2 }
         );
@@ -515,7 +522,7 @@ async function createAllVideosData(settings: Job) {
 
       for (const pointInTime of pointsInTime) {
         // await
-        createScreenshot(videoPath, f(videoPath).path, pointInTime);
+        // createScreenshot(videoPath, f(videoPath).path, pointInTime);
       }
       continue;
     }
@@ -727,14 +734,16 @@ async function getInfoFromTranscription(
     }
   }
 
- 
-
   for (const chunkFromVideo of chunksFromVideo) {
     const producedChunkPath = chunkFromVideo.path;
 
     if (!existsSync(producedChunkPath)) {
-      if (job.TYPE === "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM" || job.TYPE === "ROWER_POKAZYWANIE_ROWERU_STOJACEGO") {
-        await createVideoForRovery_v1(
+      if (
+        job.TYPE === "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM" ||
+        job.TYPE === "ROWER_POKAZYWANIE_ROWERU_STOJACEGO" ||
+        job.TYPE === "ROWER_PRZYSPIESZONE_WIDEO_Z_GADANIEM"
+      ) {
+        await createVideoForRowery_v1(
           job,
           originalVideoPath,
           producedChunkPath,
@@ -742,6 +751,10 @@ async function getInfoFromTranscription(
           chunkFromVideo.trimEnd,
           format
         );
+
+        // const a = p(f(producedChunkPath).path, "a.MP4");
+        // const small = await manipulateVideo_v3(f(producedChunkPath).path, a, 30, 34, { size: "400x?" });
+        // const x = await putVideoOnVideoForRovery_v1(f(producedChunkPath).path, producedChunkPath, small, "vid on vid");
       } else {
         await createVideo(
           job,
@@ -758,13 +771,7 @@ async function getInfoFromTranscription(
     const producedChunkPathVertical = p(f(producedChunkPath).path, "V" + f(producedChunkPath).nameWithExt);
     if (job.CREATE_VERTICAL_CHUNKS) {
       // you can await or go on
-      await createVerticalChunksWithDurationLimit(
-        job,
-        producedChunkPath,
-        producedChunkPathVertical,
-        58,
-        "Zobacz CALY film"
-      ); // await
+      await createVerticalChunksWithDurationLimit(job, producedChunkPath, producedChunkPathVertical, 58, ""); // await
     }
   }
 

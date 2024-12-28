@@ -26,6 +26,7 @@ export interface Job {
   BASE_DIR: string;
   BASE_FOLDER: string;
   PRODUCED_FOLDER?: string; // remove this
+  ADD_EXTRA_CONTENT?: boolean;
   FLIP_CHUNK?: boolean;
   ZOOM_IN_INSIDE_CHUNK?: boolean;
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER?: boolean;

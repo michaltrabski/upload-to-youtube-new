@@ -11,7 +11,7 @@ const openai = new OpenAI({
 export const askChatGpt = async (question: string) => {
   await new Promise((resolve) => setTimeout(resolve, 1));
 
-  return "answer from GPT is blocked for now, uncomment it in the code to use it";
+  // return "answer from GPT is blocked for now, uncomment it in the code to use it";
 
   const message: ChatCompletionMessageParam = {
     role: "user",

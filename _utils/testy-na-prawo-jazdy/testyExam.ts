@@ -18,8 +18,10 @@ import {
   textToPng_v3,
 } from "../ffmpeg-v3";
 import { t } from "./translations";
+import { createSingleTextVideo } from "./createSingleTextVideo";
 
 type Lang = "pl" | "en" | "de";
+
 export const createExam = async (job: Job, examIndex: number, exams: ExamData[], lang: Lang): Promise<number> => {
   const scale = 1;
   const WIDTH = 1920 / scale;
@@ -28,21 +30,23 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[],
   const GAP = 20;
   const PNG_BG_COLOR = "rgb(71 85 105)";
   const PNG_BG_COLOR_GREEN = "#15803d";
+  const START_INDEX = 0;
   const LIMIT = 99999999;
 
   // const scale = 1;
   // const WIDTH = 1920 / scale;
   // const HEIGHT = 1080 / scale;
-  // const VIDEO_DURATION_LIMIT = 1;
+  // const VIDEO_DURATION_LIMIT = 199999;
   // const GAP = 20;
   // const PNG_BG_COLOR = "rgb(71 85 105)";
   // const PNG_BG_COLOR_GREEN = "#15803d";
-  // const LIMIT = 22;
+  // const START_INDEX = 1;
+  // const LIMIT = 2;
 
   const currentExam = exams[examIndex];
   const { examQuestions32, examSlug } = currentExam;
 
-  const examQuestions32Limited = examQuestions32.slice(0, LIMIT); // .slice(18, 25);
+  const examQuestions32Limited = examQuestions32.slice(START_INDEX, LIMIT);
 
   const { BASE_DIR, BASE_FOLDER } = job;
   const pb = (path: string) => p(BASE_FOLDER, path);
@@ -67,20 +71,43 @@ export const createExam = async (job: Job, examIndex: number, exams: ExamData[],
   const mp4_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp4");
   const blankPng = p(BASE_DIR, "_silent_mp3", "blank.png");
 
-  // const downloadedIntroVideo = await downloadVideo(introVideoUrl, pb("introVideo.mp4"));
-
-  // const introVideo = await manipulateVideo_v2(downloadedIntroVideo, 0, VIDEO_DURATION_LIMIT, {
-  //   size,
-  //   blur: 0,
-  //   crop: 0,
-  //   fps: 29.97,
-  // });
-
-  let i = 0;
-  const examVideosPaths: string[] = [];
+  let i = START_INDEX;
   const videos: string[] = [];
   const texts: string[] = [];
   const durations: number[] = [];
+
+  // const textsAndMedia = [
+  //   { myText: t.zapraszamNaEgzaminPoAngielsku[lang], media: "IMG_7431aorgbm.png" },
+  //   { myText: t.wiecejFilmowAngielskichNaInnymKanale[lang], media: "IMG_9330orgbm.png" },
+  //   { myText: t.linkDoKanalu[lang], media: "IMG_4011org.png" },
+  // ];
+
+  // for (const { myText, media } of textsAndMedia) {
+  //   const { video, text, duration } = await createSingleTextVideo(
+  //     CURRENT_EXAM_SUBFOLDER,
+  //     myText, // to przykładowy text
+  //     media,
+  //     "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/",
+  //     blankPng,
+  //     mp4_1000,
+  //     WIDTH,
+  //     HEIGHT,
+  //     GAP,
+  //     PNG_BG_COLOR,
+  //     PNG_BG_COLOR_GREEN,
+  //     scale,
+  //     size,
+  //     remoteFolderWithMp3,
+  //     mp3_1000,
+  //     VIDEO_DURATION_LIMIT,
+  //     PRODUCED_FOLDER,
+  //     lang
+  //   );
+
+  //   videos.push(video);
+  //   texts.push(text);
+  //   durations.push(duration);
+  // }
 
   for (const drivingQuestion of examQuestions32Limited) {
     i++;

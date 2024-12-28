@@ -5,8 +5,8 @@ const makeHorizontalVideos: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 1, // 0.3
-  TRIM_LATER: 1, // 0.5
+  TRIM_EALIER: 0.3,
+  TRIM_LATER: 0.5,
   MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
@@ -44,17 +44,6 @@ const SETTINGS_HORIZONTAL_MERGE: Job = {
   BASE_FOLDER: p(__dirname, "videos-horizontal-merge"),
   PRODUCED_FOLDER: p(__dirname, "PRODUCED_HORIZONTAL_MERGE"),
 };
-
-// const SETTINGS_VERTICAL: Settings = {
-//   ORIENTATION: "VERTICAL",
-//   DEEPGRAM_LANG: "pl", // "en" | "pl"
-//   TRIM_EALIER: 0.3,
-//   TRIM_LATER: 2,
-//   MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 11.6, // 11.6 is great for videos recorded on poznaj-testy;
-//   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 11.6,
-//   BASE_FOLDER: p(__dirname, "videos-vertical"),
-//   PRODUCED_FOLDER: p(__dirname, "PRODUCED_VERTICAL"),
-// };
 
 const SETTINGS_VERTICAL: Job = {
   EXECUTE: false,
@@ -234,20 +223,22 @@ const rower_przyspieszone_wideo_z_gadaniem: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
+
 const rower_jazda_z_garminem_i_gadaniem: Job = {
   TYPE: "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM",
   ORIENTATION: "HORIZONTAL",
   DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 0, // 0.5,
-  TRIM_LATER: 0, // 1,
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 0.2, // 2,
+  TRIM_EALIER: 0.5,
+  TRIM_LATER: 1,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2,
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
   BASE_FOLDER: p(__dirname, "ROWER_JAZDA_Z_GARMINEM_I_GADANIEM"),
-  FLIP_CHUNK: true, // garmin records videos upside down on chesty mount
+  ADD_EXTRA_CONTENT: true,
+  FLIP_CHUNK: false, // garmin records videos upside down on chesty mount
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: false, // this  is slow and to work with michal
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+  CREATE_VERTICAL_CHUNKS: false, // this  is slow and to rework it michal !!
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
@@ -336,28 +327,43 @@ const jazdaPoStrefieEgzaminacyjnejHorizontalVideo: Job = {
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const codingVideos: Job = {
+  TYPE: "MAKE_HORIZONTAL_VIDEO",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "en", // "en" | "pl"
+  TRIM_EALIER: 0.3,
+  TRIM_LATER: 0.5,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 0.9,
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "javascript-video"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
+};
+
 export const ALL_JOBS: Job[] = [
   // HORIZONTAL
-  { ...createChunksHorizontalVideo, EXECUTE: false },
-
-  { ...parkAcarHorizontalVideo, EXECUTE: false },
-  { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: false },
-
-  { ...eBikeHorizontalVideo, EXECUTE: false },
-  { ...eBikeHorizontalVideoGarmin, EXECUTE: false },
-
-  { ...mergeVideos, EXECUTE: false },
+  // { ...createChunksHorizontalVideo, EXECUTE: false },
+  // { ...parkAcarHorizontalVideo, EXECUTE: false },
+  // { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: false },
+  // { ...eBikeHorizontalVideo, EXECUTE: false },
+  // { ...eBikeHorizontalVideoGarmin, EXECUTE: false },
+  // { ...mergeVideos, EXECUTE: false },
 
   // VERTICAL
-  { ...eBikeVerticalVideo, EXECUTE: false },
-  { ...dieselHeaterVerticalVideo, EXECUTE: false },
+  // { ...eBikeVerticalVideo, EXECUTE: false },
+  // { ...dieselHeaterVerticalVideo, EXECUTE: false },
+  // { ...eBikeAccelerationShortsVideo, EXECUTE: false },
 
-  { ...eBikeAccelerationShortsVideo, EXECUTE: false },
+  // JAVASCRIPT VIDEOS
+  { ...codingVideos, EXECUTE: false },
 
   // NAUKA JAZDY
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
-  { ...createExam, EXECUTE: true },
+  { ...createExam, EXECUTE: false },
   { ...createExamEn, EXECUTE: false },
 
   // FILMY ROWEROWE

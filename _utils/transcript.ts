@@ -4,7 +4,7 @@ import { Job } from "./types";
 import { convertSecondsToYtTimestamp, log, p } from "./utils";
 import { askChatGpt } from "./gpt";
 
-export async function mergeTranscriptFromAllChunksFromAllVideos(job: Job, videos: VideoChunk[]) {
+export async function mergeTranscriptFromAllChunksFromAllVideos(job: Job, videos: VideoChunk[], lang: "pl" | "en") {
   const { BASE_FOLDER } = job;
   const producedFolder = p(`${BASE_FOLDER}_PRODUCED`);
   const folderToCopy = p(producedFolder);
@@ -44,20 +44,31 @@ export async function mergeTranscriptFromAllChunksFromAllVideos(job: Job, videos
       ${timestampsAsText}
       `;
 
-  const oCzymMowieWFilmieAnswer = await askChatGpt(oCzymMowieWFilmie);
+  const whatImTalkingAbout = `
+        Write about what you're talking about in the video based on the text.
+        Start with: "Hello everyone. In this video I talk about"
+        ${timestampsAsText}
+      `;
+
+  const oCzymMowieWFilmieAnswer = await askChatGpt(lang === "pl" ? oCzymMowieWFilmie : whatImTalkingAbout);
 
   const pytanieOpodsumowanieFilmu = `
       Napisz podsumowanie filmu, które będzie umieszczone na YouTube na podstawie tekstu:
       ${timestampsAsText}
       `;
 
+  const summarizeTheVideo = `
+        Write a summary of the video based on the text:
+        ${timestampsAsText}
+      `;
 
-  const podsumowanieFilmu = await askChatGpt(pytanieOpodsumowanieFilmu);
+  const podsumowanieFilmu = await askChatGpt(lang === "pl" ? pytanieOpodsumowanieFilmu : summarizeTheVideo);
 
   const opisFilmuNaYouTube = `To jest fragment filmu, który jest dostępny na moim kanale tutaj:
 https://www.youtube.com/watch?v=_Uc4V6Kq02Q
 
 ${oCzymMowieWFilmieAnswer}
+
 
 Timestampy:
 ${trimmedTimestampsAsText}

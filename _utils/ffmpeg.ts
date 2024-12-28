@@ -3,6 +3,8 @@ import ffmpeg from "fluent-ffmpeg";
 const sharp = require("sharp");
 import { exec } from "child_process";
 const { getVideoDurationInSeconds } = require("get-video-duration");
+// const getDimensions = require("get-video-dimensions");
+const { videoDuration } = require("@numairawan/video-duration");
 
 import fs, { copyFileSync, copySync, exists, existsSync, renameSync } from "fs-extra";
 import { ManipulateVideoOptions, Job } from "./types";
@@ -560,6 +562,13 @@ export const getVideoDuration = async (videoPath: string): Promise<number> => {
   const duration = await getVideoDurationInSeconds(stream);
 
   return duration;
+};
+
+export const getVideoDurationInMiliseconds = async (videoPath: string): Promise<number> => {
+  const { ms } = await videoDuration(videoPath); //{ ms: 5400, seconds: 5, timeScale: 1000, duration: 5400 }
+  console.log("getVideoDuration", { videoPath, ms });
+
+  return ms;
 };
 
 export const mergeMp3Files = async (mp3Files: string[], producedMp3Path: string) => {
