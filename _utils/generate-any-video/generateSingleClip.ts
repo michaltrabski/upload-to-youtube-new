@@ -14,7 +14,6 @@ import {
   textToSlug160,
 } from "../utils";
 
-import { ExamData } from "./data/types";
 import { createTransparentPng } from "../jimp";
 import { manipulateVideo_v2, mergeVideos_v2 } from "../ffmpeg-v2";
 
@@ -28,11 +27,11 @@ import {
   textToPng_v3,
   trimVideo_v3,
 } from "../ffmpeg-v3";
-import { t } from "./translations";
+import { t } from "../testy-na-prawo-jazdy/translations";
 
 type Lang = "pl" | "en" | "de";
 
-export async function createSingleTextVideo(
+export async function createSingleClip(
   CURRENT_EXAM_SUBFOLDER: string,
   text: string,
   media: string,

@@ -77,6 +77,7 @@ import {
   zapraszamNaPoznajTesty,
   zdalesEgzamin,
 } from "./_utils/testy-na-prawo-jazdy/translations";
+import { generateAnyVideo } from "./_utils/generate-any-video/generateAnyVideo";
 
 require("dotenv").config();
 
@@ -291,10 +292,19 @@ async function main() {
     if (TYPE === "GENERATE_ANY_VIDEO") {
       console.log("GENERATE_ANY_VIDEO działa");
 
-      try {
-        // await createExam(job, 0, exams_b_random.exams, "en", [], []);
-      } catch (error) {
-        console.log("createExam error", error);
+      const COUNT = 1;
+      const LANG = "pl";
+
+      for (let counter of [...Array(COUNT).keys()]) {
+        const _podsumowanieEgzaminuPng = r(podsumowanieEgzaminuPng);
+        try {
+          await generateAnyVideo(job, LANG, "nazwa-wygenerowanego-filmu", [
+            { myText: "witam wszystkich", media: "zdjecie-1.png" },
+            { myText: "a teraz żegnam wszystkich", media: "video-1.mp4" },
+          ]);
+        } catch (error) {
+          console.log("GENERATE_ANY_VIDEO error", error);
+        }
       }
     }
 
