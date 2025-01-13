@@ -7,18 +7,10 @@ const Jimp = require("jimp");
 
 import fs, { copyFileSync, copySync, exists, existsSync, renameSync } from "fs-extra";
 import { ManipulateVideoOptions, Job } from "./types";
-import { f, p } from "./utils";
+import { f, log, p } from "./utils";
 import { getVideoDurationInMiliseconds } from "./ffmpeg";
 
 const PREVENT_OVERRIDE = true;
-const LOG = false;
-
-function log(...args: any[]) {
-  if (!LOG) return;
-
-  console.log();
-  console.log(...args);
-}
 
 export const textToPng_v3 = async (
   baseFolder: string,
@@ -26,9 +18,11 @@ export const textToPng_v3 = async (
   options: any,
   prefix = ""
 ): Promise<[string, number, number]> => {
-  const outputName = `${prefix}_` + md5(JSON.stringify({ baseFolder, text, options, prefix })).slice(0, 11);
+  const outputName = `${prefix}_` + md5(JSON.stringify({ baseFolder, text, options, prefix })).slice(0, 5);
 
   const procucedFileLocation = p(baseFolder, `${outputName}.png`);
+
+  log(`textToPng_v3 ${f(procucedFileLocation).nameWithExt}`);
 
   if (existsSync(procucedFileLocation)) {
     const dimensions = sizeOf(procucedFileLocation);
@@ -70,9 +64,20 @@ export const putPngOnPng_v3 = async (
   prefix = ""
 ): Promise<[string, number, number]> => {
   const outputName =
-    `${prefix}_` + md5(JSON.stringify({ baseFolder, foregroundPath, backgroundPath, x, y, prefix })).slice(0, 11);
+    `${prefix}_` + md5(JSON.stringify({ baseFolder, foregroundPath, backgroundPath, x, y, prefix })).slice(0, 5);
 
-  const procucedFileLocation = p(baseFolder, `${md5(outputName)}.png`);
+  const procucedFileLocation = p(baseFolder, `${outputName}.png`);
+
+  log(`putPngOnPng_v3 ${f(procucedFileLocation).nameWithExt}`);
+
+  if (existsSync(procucedFileLocation)) {
+    const dimensions = sizeOf(procucedFileLocation);
+
+    const width = dimensions.width;
+    const height = dimensions.height;
+
+    return [procucedFileLocation, width, height];
+  }
 
   const foregroundImage = await Jimp.read(foregroundPath);
   const backgroundImage = await Jimp.read(backgroundPath); // Fixed variable name
@@ -127,26 +132,9 @@ export const putPngOnVideo_v3 = async (
   prefix = ""
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const outputName =
-      `${prefix}_` + md5(JSON.stringify({ baseFolder, videoPath, pngPath, x, y, prefix })).slice(0, 11);
+    const outputName = `${prefix}_` + md5(JSON.stringify({ baseFolder, videoPath, pngPath, x, y, prefix })).slice(0, 5);
 
     const procucedFileLocation = p(baseFolder, `${outputName}.mp4`);
-
-    if (prefix) {
-      console.log({
-        baseFolder,
-        videoPath,
-        pngPath,
-        x,
-        y,
-        prefix,
-        procucedFileLocation,
-      });
-    }
-
-    if (procucedFileLocation.includes("aaaaaaaaa_final_short")) {
-      throw new Error(`procucedFileLocation contains spaces: ${procucedFileLocation}`);
-    }
 
     if (PREVENT_OVERRIDE) {
       if (existsSync(procucedFileLocation)) {
@@ -170,7 +158,7 @@ export const putPngOnVideo_v3 = async (
         },
       ])
       .output(producedVideoPathTemp)
-      .on("progress", (p) => log(`    progress: ${Math.floor(p.percent)}%`))
+      // // .on("progress", (p) => log(`    progress: ${Math.floor(p.percent)}%`))
       .on("end", () => {
         renameSync(producedVideoPathTemp, procucedFileLocation);
         resolve(procucedFileLocation);
@@ -191,9 +179,10 @@ export const addMp3ToVideo_v3 = async (
 
     const procucedFileLocation = p(baseFolder, `${outputName}.mp4`);
 
+    log(`addMp3ToVideo_v3 ${f(procucedFileLocation).nameWithExt}`);
+
     if (PREVENT_OVERRIDE) {
       if (existsSync(procucedFileLocation)) {
-        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, procucedFileLocation, "\n\n");
         resolve(procucedFileLocation);
         return;
       }
@@ -201,10 +190,6 @@ export const addMp3ToVideo_v3 = async (
 
     const producedVideoPathTemp = p(f(procucedFileLocation).path, `x__temp_${Math.random()}.mp4`);
 
-    console.log({
-      videoPath,
-      mp3,
-    });
     try {
       ffmpeg()
         .input(videoPath)
@@ -222,7 +207,7 @@ export const addMp3ToVideo_v3 = async (
           "-c:a aac", // Use AAC codec for audio
         ])
         .output(producedVideoPathTemp)
-        .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+        // // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
         .on("end", () => {
           renameSync(producedVideoPathTemp, procucedFileLocation);
           resolve(procucedFileLocation);
@@ -245,7 +230,7 @@ export async function manipulateVideo_v3(
   return new Promise((resolve, reject) => {
     const prefix = md5(
       JSON.stringify({ originalVideoPath, originalVideoTrimFrom, originalVideoTrimTo, options })
-    ).slice(0, 10);
+    ).slice(0, 5);
 
     const procucedFileLocation = p(baseFolder, `${md5(prefix)}.mp4`);
 
@@ -299,7 +284,6 @@ export async function manipulateVideo_v3(
         }
 
         const cropBy = (options.crop || 1) / 100;
-        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -320,7 +304,7 @@ export async function manipulateVideo_v3(
             renameSync(producedVideoPathTemp, procucedFileLocation);
             resolve(procucedFileLocation);
           })
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
           .on("error", (err: any) => reject(err))
           .run();
       });
@@ -332,7 +316,6 @@ export async function manipulateVideo_v3(
         }
 
         const cropBy = (options.cropTopRight || 1) / 100;
-        console.log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -353,7 +336,7 @@ export async function manipulateVideo_v3(
             renameSync(producedVideoPathTemp, procucedFileLocation);
             resolve(procucedFileLocation);
           })
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
           .on("error", (err: any) => reject(err))
           .run();
       });
@@ -366,7 +349,7 @@ export async function manipulateVideo_v3(
           renameSync(producedVideoPathTemp, procucedFileLocation);
           resolve(procucedFileLocation);
         })
-        .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+        // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
         .on("error", (err: any) => reject(err))
         .run();
     }
@@ -400,11 +383,11 @@ export async function mergeVideos_v3(baseFolder: string, videoPaths: string[]): 
       .on("error", (err: any) => {
         console.error(`Error: ${err}`);
       })
-      .on("progress", (p: any) => {
-        if (Math.floor(p.percent) % 10 === 0) {
-          log(`progress: ${Math.floor(p.percent)}%`);
-        }
-      })
+      // .on("progress", (p: any) => {
+      //   if (Math.floor(p.percent) % 10 === 0) {
+      //     log(`progress: ${Math.floor(p.percent)}%`);
+      //   }
+      // })
       .on("end", () => {
         renameSync(producedVideoPathTemp, procucedFileLocation);
         resolve(procucedFileLocation);
@@ -461,13 +444,9 @@ export function putVideoOnVideo_v3(
           .input(originalVideo1Path)
           .input(originalVideo2Path)
           .fps(29.97)
-          .complexFilter([
-            `[0:v][1:v] overlay=(W-w)/2:(H-h)/3:enable='between(t,3,7)'`,
-            // `[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,20)'`,
-            // "[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", // this line produce error because of audio in videos
-          ])
+          .complexFilter([`[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,30)'`]) // dont change to not to break other productions
           .output(producedVideoPathTemp)
-          .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+          // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
           .on("error", (err: any) => reject(err))
           .on("end", () => {
             renameSync(producedVideoPathTemp, producedVideoPath);
@@ -489,9 +468,10 @@ export async function makeVideoVertical_v3(
 
     const producedVideoPath = p(baseFolder, `${outputName}.mp4`);
 
+    log("makeVideoVertical_v3", producedVideoPath);
+
     if (PREVENT_OVERRIDE) {
       if (existsSync(producedVideoPath)) {
-        log(`\n makeVideoVertical() called - video already exists, returning path:\n`, producedVideoPath, "\n\n");
         resolve(producedVideoPath);
         return;
       }
@@ -508,7 +488,7 @@ export async function makeVideoVertical_v3(
         resolve(producedVideoPath);
       })
       .on("error", (err: any) => reject(err))
-      .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+      // // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
       .videoFilter("crop=ih*9/16:ih:(iw-ow)/2:(ih-oh)/2")
       // .videoCodec("libx265") // specify the H.265 codec here
       .run();
@@ -550,7 +530,7 @@ export async function trimVideo_v3(
         resolve(producedVideoPath);
       })
       .on("error", (err: any) => reject(err))
-      .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
+      // // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
       .run();
   });
 }

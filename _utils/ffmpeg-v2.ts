@@ -89,7 +89,6 @@ export async function manipulateVideo_v2(
         }
 
         const cropBy = (options.crop || 1) / 100;
-        log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;
@@ -126,7 +125,6 @@ export async function manipulateVideo_v2(
         }
 
         const cropBy = (options.cropTopRight || 1) / 100;
-        log("cropBy===", cropBy, "is about", cropBy * 100 + "%");
 
         const videoStream = metadata.streams.find((stream) => stream.codec_type === "video");
         const originalWidth = videoStream?.width;

@@ -1,5 +1,6 @@
 const textToImage = require("text-to-image");
 const sizeOf = require("image-size");
+const https = require("https");
 
 import fs, {
   copyFileSync,
@@ -25,7 +26,14 @@ import axios from "axios";
 import { manipulateVideo_v3 } from "./ffmpeg-v3";
 
 export const p = path.resolve;
-export const log = console.log;
+// export const log = console.log;
+
+export function log(...args: any[]) {
+  // return;
+
+  args.forEach((arg) => console.log(arg));
+  // console.log();
+}
 
 export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const f = (str: string) => {
@@ -375,55 +383,45 @@ export const createVerticalChunksWithDurationLimit = async (
 };
 
 export const downloadVideo = async (url: string, outputPath: string, defaultMp4: string): Promise<string> => {
+  console.log(`Downloading mp4 from ${url}`);
+
   if (existsSync(outputPath)) {
-    console.log(`Mp4 already exists at ${outputPath}`);
     return outputPath;
   }
 
-  console.log(`Downloading mp4 from ${url}`);
   try {
     const response = await axios.get(url, { responseType: "arraybuffer" });
 
     if (response.status !== 200) {
-      console.log(`Failed to download mp3 from ${url}`);
       return defaultMp4;
     }
 
-    console.log(`Saving mp3 to ${outputPath}`);
     writeFileSync(outputPath, response.data);
-
-    console.log(`Mp3 downloaded successfully to ${outputPath}`);
 
     return outputPath;
   } catch (error) {
-    console.log(`Failed to download mp3 from ${url}`, error);
     return defaultMp4;
   }
 };
 
 export const downloadMp3 = async (url: string, outputPath: string, defaultMp3: string): Promise<string> => {
+  console.log(`Downloading mp3 from ${url}`);
+
   if (existsSync(outputPath)) {
-    console.log(`Mp3 already exists at ${outputPath}`);
     return outputPath;
   }
 
-  console.log(`Downloading mp3 from ${url}`);
   try {
     const response = await axios.get(url, { responseType: "arraybuffer" });
 
     if (response.status !== 200) {
-      console.log(`Failed to download mp3 from ${url}`);
       return defaultMp3;
     }
 
-    console.log(`Saving mp3 to ${outputPath}`);
     writeFileSync(outputPath, response.data);
-
-    console.log(`Mp3 downloaded successfully to ${outputPath}`);
 
     return outputPath;
   } catch (error) {
-    console.log(`Failed to download mp3 from ${url}`, error);
     return defaultMp3;
   }
 };

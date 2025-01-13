@@ -5,12 +5,30 @@ export const r = (strArr: string[]) => {
 
 export const rozpoczynamyEgzamin = [
   "Rozpoczynamy egzamin na prawo jazdy!",
-  "Rozwiążmy sobie teraz egzamin na prawo jazdy!",
+  "Rozwiążemy sobie teraz egzamin na prawo jazdy!",
   "Rozpoczynamy egzamin na prawo jazdy!",
   "Wykonam egzamin na prawo jazdy kategorii B",
 ];
 
 export const rozpocznijEgzaminMp4 = ["rozpocznijEgzamin1.mp4", "rozpocznijEgzamin2.mp4"];
+
+export const zdalesEgzamin = [
+  "Zdałem egzamin teoretyczny na prawo jazdy!",
+  "Jak widać zdałem egzamin teoretyczny na prawo jazdy!",
+];
+
+export const zapraszamNaPoznajTesty = [
+  "Wykonaj egzamin samodzielnie na naszej stronie poznaj-testy.pl!",
+  "Wejdź na naszą stronę poznaj-testy.pl i wykonaj egzamin samodzielnie!",
+  "Zapraszam na naszą stronę poznaj-testy.pl gdzie możesz zrobić za darmo egzamin na prawo jazdy!",
+];
+
+export const podsumowanieEgzaminuPng = [
+  "podsumowanieEgzaminu1.png",
+  "podsumowanieEgzaminu2.png",
+  "podsumowanieEgzaminu3.png",
+  "podsumowanieEgzaminu4.png",
+];
 
 export const t = {
   zapraszamNaEgzaminPoAngielsku: {

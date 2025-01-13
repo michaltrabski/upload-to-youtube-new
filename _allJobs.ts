@@ -343,6 +343,22 @@ const codingVideos: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: true,
 };
 
+const generateAnyVideo: Job = {
+  TYPE: "GENERATE_ANY_VIDEO",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "generowanie-video"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 export const ALL_JOBS: Job[] = [
   // HORIZONTAL
   // { ...createChunksHorizontalVideo, EXECUTE: false },
@@ -363,11 +379,14 @@ export const ALL_JOBS: Job[] = [
   // NAUKA JAZDY
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
-  { ...createExam, EXECUTE: true },
+  { ...createExam, EXECUTE: false },
   { ...createExamEn, EXECUTE: false },
 
   // FILMY ROWEROWE
   { ...rower_przyspieszone_wideo_z_gadaniem, EXECUTE: false },
   { ...rower_jazda_z_garminem_i_gadaniem, EXECUTE: false },
   { ...rower_pokazywanie_roweru_stojącego, EXECUTE: false },
+
+  // GENEROWANIE WIDEO
+  { ...generateAnyVideo, EXECUTE: true },
 ];

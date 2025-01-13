@@ -19,7 +19,6 @@ function log(...args: any[]) {
 
 export function createVideo(
   job: Job,
-  // fps: number,
   originalVideoPath: string,
   producedVideoPath: string,
   originalVideoTrimFrom: number,
@@ -34,6 +33,8 @@ export function createVideo(
         return;
       }
     }
+
+    log("createVideo", producedVideoPath);
 
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${Math.random()}.mp4`);
 
@@ -566,7 +567,6 @@ export const getVideoDuration = async (videoPath: string): Promise<number> => {
 
 export const getVideoDurationInMiliseconds = async (videoPath: string): Promise<number> => {
   const { ms } = await videoDuration(videoPath); //{ ms: 5400, seconds: 5, timeScale: 1000, duration: 5400 }
-  console.log("getVideoDuration", { videoPath, ms });
 
   return ms;
 };

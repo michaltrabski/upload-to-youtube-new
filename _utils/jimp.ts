@@ -1,5 +1,5 @@
 import { copy, copyFileSync, writeFileSync } from "fs-extra";
-import { f } from "./utils";
+import { f, log } from "./utils";
 
 const Jimp = require("jimp");
 const sizeOf = require("image-size");
@@ -9,6 +9,8 @@ export const createTransparentPng = async (
   height: number,
   procucedFileLocation: string
 ): Promise<[string, number, number]> => {
+  log("createTransparentPng");
+
   const image = await new Jimp(width, height, 0x00000000); // Initialize image with transparency
   // const image = await new Jimp(width, height, 0xff00004d); // Initialize image with transparency
 
