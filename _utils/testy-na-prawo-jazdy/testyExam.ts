@@ -11,11 +11,22 @@ import {
 } from "fs-extra";
 
 import { ExamData } from "./data/types";
-import { TextAndMediaInExam } from "../../types";
+import { TextAndMediaForExamVideo } from "../../types";
 
 import { getVideoDuration, getVideoDurationInMiliseconds, mergeVideos } from "../ffmpeg";
 import { Job } from "../types";
-import { convertSecondsToYtTimestamp, createScreenshot, f, log, p, safeFileName, textToSlug160 } from "../utils";
+import {
+  convertSecondsToYtTimestamp,
+  createScreenshot,
+  downloadMp3,
+  downloadPngOrMp4,
+  downloadVideo,
+  f,
+  log,
+  p,
+  safeFileName,
+  textToSlug160,
+} from "../utils";
 import { createTransparentPng } from "../jimp";
 import { mergeVideos_v2 } from "../ffmpeg-v2";
 import {
@@ -38,8 +49,8 @@ export const createExam = async (
   examIndex: number,
   exams: ExamData[],
   lang: Lang,
-  textsAndMediaBeforeExam: TextAndMediaInExam[],
-  textsAndMediaAfterExam: TextAndMediaInExam[]
+  textsAndMediaBeforeExam: TextAndMediaForExamVideo[],
+  textsAndMediaAfterExam: TextAndMediaForExamVideo[]
 ): Promise<number> => {
   const scale = 1;
   const WIDTH = 1920 / scale;
@@ -50,7 +61,7 @@ export const createExam = async (
   const PNG_BG_COLOR_GREEN = "#15803d";
   const START_NR = 1;
   const START_INDEX = START_NR - 1;
-  const HOW_MANY_QUESTIONS_TO_CREATE = 999999999;
+  const HOW_MANY_QUESTIONS_TO_CREATE = 9999999;
   const LIMIT = START_INDEX + HOW_MANY_QUESTIONS_TO_CREATE;
 
   // const scale = 1;
@@ -83,7 +94,7 @@ export const createExam = async (
 
   const size = `${WIDTH}x${HEIGHT}`;
 
-  const videoPath = p(BASE_DIR, "_ignore_files");
+  const videoPath = CURRENT_EXAM_SUBFOLDER;
 
   let remoteFolderWithMp3 = "https://hosting2421517.online.pro/testy-na-prawo-jazdy/mp3/";
   if (lang === "en") remoteFolderWithMp3 = remoteFolderWithMp3 + "en/";
@@ -127,6 +138,13 @@ export const createExam = async (
   let questionIndex = START_INDEX;
   for (const drivingQuestion of examQuestions32Limited) {
     questionIndex++;
+
+    // michal this function download mp4 or png and default blank png if no media found or media === ""
+    await downloadVideo(
+      "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/" + drivingQuestion.media,
+      CURRENT_EXAM_SUBFOLDER + "/" + drivingQuestion.media,
+      blankPng
+    );
 
     const { video, text, duration } = await createSingleQuestionVideo(
       CURRENT_EXAM_SUBFOLDER,
@@ -240,7 +258,7 @@ async function createSingleQuestionVideo(
 
   const singleQuestionVideo = p(CURRENT_EXAM_SUBFOLDER, `${id}_${i}.mp4`);
 
-  log("", `createSingleQuestionVideo ${f(singleQuestionVideo).nameWithExt}`, "");
+  log(`createSingleQuestionVideo() ${f(singleQuestionVideo).nameWithExt}`, "");
 
   if (existsSync(singleQuestionVideo)) {
     const singleVideoDurationMs = await getVideoDurationInMiliseconds(singleQuestionVideo);
@@ -253,6 +271,7 @@ async function createSingleQuestionVideo(
   const questionTextMp3 = remoteFolderWithMp3 + textToSlug160(questionText) + ".mp3";
 
   let answerText = "";
+  if (r === "") answerText = "Zapraszam do dyskusji";
   if (r === "t") answerText = t.odpowiedzTak[lang];
   if (r === "n") answerText = t.odpowiedzNie[lang];
   if (r === "a") answerText = `${t.odpowiedzA[lang]} ${a}`;
@@ -266,7 +285,7 @@ async function createSingleQuestionVideo(
   const sourceMedia = p(videoPath, media || blankPng);
 
   if (!existsSync(sourceMedia)) {
-    log("sourceMedia not exist", sourceMedia);
+    log(`sourceMedia not exist ${sourceMedia}`);
     throw new Error("sourceMedia not exist");
   }
 
@@ -649,7 +668,7 @@ async function createSingleQuestionVideo(
   // CREATE SHORT VIDEO
   const createdShortsIdsFile = p(__dirname, "createdShortsIds.json");
   const createdShortsIds = readJsonSync(createdShortsIdsFile);
-  if (false && media && !createdShortsIds[lang].includes(id)) {
+  if (true && media && !createdShortsIds[lang].includes(id)) {
     const bg = await manipulateVideo_v4(
       CURRENT_EXAM_SUBFOLDER,
       baseVideo,

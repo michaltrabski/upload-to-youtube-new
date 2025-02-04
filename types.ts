@@ -81,7 +81,12 @@ export interface ChunkFromVideo {
   timestampsForYt: string[];
 }
 
-export interface TextAndMediaInExam {
+export interface ArticleData {
+  tekst: string;
+  imagePromptInEn: string;
+}
+
+export interface TextAndMediaForExamVideo {
   myText: string;
   media: string;
 }

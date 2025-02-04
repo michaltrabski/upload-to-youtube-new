@@ -6,6 +6,7 @@ import fs, {
   copyFileSync,
   ensureDirSync,
   existsSync,
+  promises,
   readJsonSync,
   readdirSync,
   removeSync,
@@ -283,7 +284,7 @@ export function textToSlug160(text: string) {
 }
 
 export const safeFileName = (text: string) => {
-  return text.replace(/[<>:"/\\|?*]/g, "");
+  return text.replace(/[<>:"/\\|?*]/g, "").slice(0, 150);
 };
 
 export const textToPng = async (
@@ -380,6 +381,17 @@ export const createVerticalChunksWithDurationLimit = async (
     fs.copySync(final_a, p(`${job.BASE_FOLDER}_PRODUCED`, f(final_a).nameWithExt.split(" ").slice(1).join(" ")));
     await wait(3000);
   }
+};
+
+export const downloadPngOrMp4 = async (sourceMediaRemote: string, dest: string) => {
+  console.log(`Downloading png from ${sourceMediaRemote} to ${dest}`);
+  const response = await fetch(sourceMediaRemote);
+  if (!response.ok) {
+    throw new Error(`Failed to download downloadPngOrMp4: ${response.statusText}`);
+  }
+  const buffer = await response.arrayBuffer();
+  await promises.writeFile(dest, Buffer.from(buffer));
+  return dest;
 };
 
 export const downloadVideo = async (url: string, outputPath: string, defaultMp4: string): Promise<string> => {

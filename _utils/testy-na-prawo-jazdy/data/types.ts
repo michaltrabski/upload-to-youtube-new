@@ -34,6 +34,8 @@ export interface NormalizedQuestionE6 extends NormalizedQuestion {
 }
 
 export interface QuestionBig {
+  author?: string;
+  hint?: string;
   slug: string;
   isActive: boolean;
   id: string;
@@ -78,6 +80,11 @@ export interface QuestionBigObj {
   questionsBig: QuestionBig[];
 }
 
+export interface QuestionBigObjMichal {
+  questionsBigCount: number;
+  questionsBig: QuestionBig[];
+}
+
 export interface QuestionSmall {
   slug: string;
   isActive: boolean;
@@ -111,7 +118,7 @@ export interface ExamData {
   examCategory: string;
   minPointsToPass: number;
   allPossiblePoints: number;
-  examQuestions32: QuestionSmall[];
+  examQuestions32: (QuestionSmall | QuestionBig)[];
 }
 
 export interface ExamDataObj {

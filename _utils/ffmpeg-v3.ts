@@ -405,7 +405,7 @@ export function putVideoOnVideo_v3(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const outputName =
-      `${prefix}_` + md5(JSON.stringify({ baseFolder, originalVideo1Path, originalVideo2Path, prefix })).slice(0, 11);
+      `${prefix}_` + md5(JSON.stringify({ baseFolder, originalVideo1Path, originalVideo2Path, prefix })).slice(0, 5);
 
     const producedVideoPath = p(baseFolder, `${outputName}.mp4`);
 
@@ -444,7 +444,7 @@ export function putVideoOnVideo_v3(
           .input(originalVideo1Path)
           .input(originalVideo2Path)
           .fps(29.97)
-          .complexFilter([`[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,30)'`]) // dont change to not to break other productions
+          .complexFilter([`[0:v][1:v] overlay=(W-w)/2:(H-h)/2:enable='between(t,0,9999)'`]) // dont change to not to break other productions
           .output(producedVideoPathTemp)
           // .on("progress", (p: any) => log(`    progress: ${Math.floor(p.percent)}%`))
           .on("error", (err: any) => reject(err))
@@ -482,7 +482,7 @@ export async function makeVideoVertical_v3(
     ffmpeg()
       .input(originalVideoPath)
       .output(producedVideoPathTemp)
-      .fps(29.97)
+      // .fps(29.97)
       .on("end", () => {
         renameSync(producedVideoPathTemp, producedVideoPath);
         resolve(producedVideoPath);

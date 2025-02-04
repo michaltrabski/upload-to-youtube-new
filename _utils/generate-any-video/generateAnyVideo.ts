@@ -10,7 +10,7 @@ import {
   writeJsonSync,
 } from "fs-extra";
 
-import { TextAndMediaInExam } from "../../types";
+import { ArticleData } from "../../types";
 
 import { getVideoDuration, getVideoDurationInMiliseconds, mergeVideos } from "../ffmpeg";
 import { Job } from "../types";
@@ -37,7 +37,7 @@ export const generateAnyVideo = async (
   job: Job,
   lang: Lang,
   generatedVideoName: string,
-  textsAndMediaBeforeExam: TextAndMediaInExam[]
+  articleData: ArticleData[]
 ): Promise<void> => {
   const scale = 1;
   const WIDTH = 1920 / scale;
@@ -46,10 +46,10 @@ export const generateAnyVideo = async (
   const GAP = 20;
   const PNG_BG_COLOR = "rgb(71 85 105)";
   const PNG_BG_COLOR_GREEN = "#15803d";
-  const START_NR = 1;
-  const START_INDEX = START_NR - 1;
-  const HOW_MANY_QUESTIONS_TO_CREATE = 999999999;
-  const LIMIT = START_INDEX + HOW_MANY_QUESTIONS_TO_CREATE;
+  // const START_NR = 1;
+  // const START_INDEX = START_NR - 1;
+  // const HOW_MANY_QUESTIONS_TO_CREATE = 999999999;
+  // const LIMIT = START_INDEX + HOW_MANY_QUESTIONS_TO_CREATE;
 
   // const scale = 1;
   // const WIDTH = 1920 / scale;
@@ -81,11 +81,7 @@ export const generateAnyVideo = async (
 
   const size = `${WIDTH}x${HEIGHT}`;
 
-  const videoPath = p(BASE_DIR, "_ignore_files");
-
-  let remoteFolderWithMp3 = "https://hosting2421517.online.pro/generate-any-video/usun-mnie/";
-  if (lang === "en") remoteFolderWithMp3 = remoteFolderWithMp3 + "en/";
-  if (lang === "de") remoteFolderWithMp3 = remoteFolderWithMp3 + "de/";
+  let remoteFolderWithMp3 = "https://hosting2421517.online.pro/generate-any-video/";
 
   const mp3_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp3");
   const mp4_1000 = p(BASE_DIR, "_silent_mp3", "1000.mp4");
@@ -95,12 +91,15 @@ export const generateAnyVideo = async (
   const texts: string[] = [];
   const durations: number[] = [];
 
-  for (const { myText, media } of textsAndMediaBeforeExam) {
+  for (const { tekst, imagePromptInEn } of articleData) {
+    const myText = tekst;
+    const media = textToSlug160(imagePromptInEn) + ".png";
+
     const { video, text, duration } = await createSingleClip(
       CURRENT_EXAM_SUBFOLDER,
       myText, // to przykładowy text
       media,
-      "https://hosting2421517.online.pro/generate-any-video/usun-mnie/",
+      "https://hosting2421517.online.pro/generate-any-video/",
       blankPng,
       mp4_1000,
       WIDTH,
@@ -146,9 +145,49 @@ export const generateAnyVideo = async (
   const producedVideoPath = p(PRODUCED_FOLDER, f(examVideo).nameWithExt);
   copyFileSync(examVideo, producedVideoPath);
 
-  const pointsInTime = [...[...Array(3)].map((_, i) => `00:00:0${i * 3 + 4}`)];
+  if (false) {
+    const pointsInTime = [...[...Array(3)].map((_, i) => `00:00:0${i * 3 + 4}`)];
+    for (const pointInTime of pointsInTime) {
+      await createScreenshot(producedVideoPath, f(producedVideoPath).path, pointInTime);
+    }
+  }
 
-  for (const pointInTime of pointsInTime) {
-    await createScreenshot(producedVideoPath, f(producedVideoPath).path, pointInTime);
+  // CREATE SHORT VIDEO
+  if (true) {
+    const bg = await manipulateVideo_v4(
+      CURRENT_EXAM_SUBFOLDER,
+      producedVideoPath,
+      0,
+      VIDEO_DURATION_LIMIT,
+      {
+        size,
+        blur: 15,
+        crop: 10,
+      },
+      "bg"
+    );
+
+    const inner = await manipulateVideo_v4(
+      CURRENT_EXAM_SUBFOLDER,
+      producedVideoPath,
+      0,
+      VIDEO_DURATION_LIMIT,
+      {
+        size: `${WIDTH / 2}x${HEIGHT / 2}`,
+        blur: 0,
+        crop: 0,
+      },
+      "inner"
+    );
+
+    const videoInVideo = await putVideoOnVideo_v3(CURRENT_EXAM_SUBFOLDER, bg, inner, "videoInVideo");
+
+    const singleFinalVideoVertical = await makeVideoVertical_v3(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideo,
+      "videoInVideoVertical"
+    );
+
+    copyFileSync(singleFinalVideoVertical, p(PRODUCED_FOLDER, f(singleFinalVideoVertical).nameWithExt));
   }
 };

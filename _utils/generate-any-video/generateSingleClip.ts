@@ -28,6 +28,7 @@ import {
   trimVideo_v3,
 } from "../ffmpeg-v3";
 import { t } from "../testy-na-prawo-jazdy/translations";
+import { manipulateVideo_v4 } from "../ffmpeg-v4";
 
 type Lang = "pl" | "en" | "de";
 
@@ -51,6 +52,8 @@ export async function createSingleClip(
   PRODUCED_FOLDER: string,
   lang: Lang
 ): Promise<{ video: string; text: string; duration: number }> {
+  const MAIN_TEXT_FONT_SIZE = 50;
+
   const singleTextVideoFullPath = p(CURRENT_EXAM_SUBFOLDER, `${safeFileName(media + text)}.mp4`);
 
   if (existsSync(singleTextVideoFullPath)) {
@@ -142,31 +145,23 @@ export async function createSingleClip(
     textColor: "black",
   });
 
-  const [questionTextAsPng, widthQuestionTextPng, heightQuestionTextPng] = await textToPng_v3(
-    CURRENT_EXAM_SUBFOLDER,
-    `${text}`,
-    {
-      maxWidth: (WIDTH / 5) * 3,
-      fontSize: 50 / scale,
-      lineHeight: 60 / scale,
-      margin: 10,
-      bgColor: PNG_BG_COLOR,
-      textColor: "white",
-    }
-  );
+  const [mainTextPng, widthMainTextPng, heightMainTextPng] = await textToPng_v3(CURRENT_EXAM_SUBFOLDER, `${text}`, {
+    maxWidth: (WIDTH / 5) * 3,
+    fontSize: MAIN_TEXT_FONT_SIZE / scale,
+    lineHeight: (MAIN_TEXT_FONT_SIZE * 1.2) / scale,
+    margin: MAIN_TEXT_FONT_SIZE * 0.15,
+    bgColor: PNG_BG_COLOR,
+    textColor: "white",
+  });
 
-  const [transparentPng, widthTransparentPng, heightTransparentPng] = await createTransparentPng(
-    WIDTH,
-    HEIGHT,
-    p(CURRENT_EXAM_SUBFOLDER, "transparent.png")
-  );
+  const [transparentPng] = await createTransparentPng(WIDTH, HEIGHT, p(CURRENT_EXAM_SUBFOLDER, "transparent.png"));
 
   const [finalPng] = await putPngOnPng_v3(
     CURRENT_EXAM_SUBFOLDER,
-    questionTextAsPng,
+    mainTextPng,
     transparentPng,
     WIDTH / 5,
-    (HEIGHT / 5) * 4 - heightQuestionTextPng,
+    (HEIGHT / 5) * 4 - heightMainTextPng,
     "finalPng"
   );
 
@@ -196,9 +191,122 @@ export async function createSingleClip(
     // lastFrameWidthTextAndAnswersAndLogo_1s_CorrectAnswer,
   ];
 
-  const singleQuestion = await mergeVideos(videosToMergeForSingleQuestion, singleTextVideoFullPath);
+  const singleFinalVideo = await mergeVideos(videosToMergeForSingleQuestion, singleTextVideoFullPath);
 
   const singleVideoDuration = await getVideoDuration(singleTextVideoFullPath);
 
-  return { video: singleQuestion, text, duration: singleVideoDuration };
+  // CREATE SHORT VIDEO
+
+  if (true) {
+    // const bg = await manipulateVideo_v4(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   baseVideo,
+    //   0,
+    //   VIDEO_DURATION_LIMIT,
+    //   {
+    //     size,
+    //     blur: 15,
+    //     crop: 10,
+    //   },
+    //   "bg"
+    // );
+    // const inner = await manipulateVideo_v4(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   baseVideo,
+    //   0,
+    //   VIDEO_DURATION_LIMIT,
+    //   {
+    //     size: `${WIDTH / 2}x${HEIGHT / 2}`,
+    //     blur: 0,
+    //     crop: 0,
+    //   },
+    //   "inner"
+    // );
+    // const videoInVideo = await putVideoOnVideo_v3(CURRENT_EXAM_SUBFOLDER, bg, inner, "videoInVideo");
+    // const singleFinalVideoVertical = await makeVideoVertical_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   videoInVideo,
+    //   "videoInVideoVertical"
+    // );
+    // const questionTextMp3Short = remoteFolderWithMp3 + textToSlug160(text) + ".mp3";
+    // const videoInVideoVerticalMp3 = await addMp3ToVideo_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   videoInVideoVertical,
+    //   questionTextMp3Short,
+    //   "__1 short_with_text_mp3"
+    // );
+    // // SHORT PNGs
+    // const [transparentPngShort] = await createTransparentPng(
+    //   608,
+    //   HEIGHT,
+    //   p(CURRENT_EXAM_SUBFOLDER, "__3 transparentShort.png")
+    // );
+    // const [odwiedzStrone, odwiedzStroneWidth, odwiedzStroneHeight] = await textToPng_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   t.zobaczNaszaStrone[lang],
+    //   { fontSize: 20, bgColor: "transparent" },
+    //   "__0 odwiedzStrone"
+    // );
+    // const [poznajTesty, poznajTestyWidth, poznajTestyHeight] = await textToPng_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   "poznaj-testy.pl",
+    //   { fontSize: 30, bgColor: "yellow", lineHeight: 40 },
+    //   "__4 poznajTesty"
+    // );
+    // const [questionTextPNGforShort, questionTextPNGforShortWidth, questionTextPNGforShortHeight] = await textToPng_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   `${text}`,
+    //   {
+    //     maxWidth: 400,
+    //     fontSize: 20,
+    //     lineHeight: 30,
+    //     margin: 10,
+    //     bgColor: PNG_BG_COLOR,
+    //     textColor: "white",
+    //   }
+    // );
+    // const [png1] = await putPngOnPng_v3(CURRENT_EXAM_SUBFOLDER, odwiedzStrone, transparentPngShort, 50, 50);
+    // const [png2] = await putPngOnPng_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   poznajTesty,
+    //   png1,
+    //   50,
+    //   50 + poznajTestyHeight,
+    //   "__5 pngShort"
+    // );
+    // const [png3] = await putPngOnPng_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   questionTextPNGforShort,
+    //   png2,
+    //   50,
+    //   HEIGHT - questionTextPNGforShortHeight - 300
+    // );
+    // const shortWithQuestionAndLogo_variant2 = await putPngOnVideo_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   videoInVideoVerticalMp3,
+    //   png3,
+    //   0,
+    //   0,
+    //   "__6 short_with_question_and_logo"
+    // );
+    // // const random0_1 = Math.floor(Math.random() * 2);
+    // // const shortVideo_variant = random0_1 === 0 ? shortWithQuestionAndLogo_variant1 : shortWithQuestionAndLogo_variant2;
+    // const shortVideo_variant = shortWithQuestionAndLogo_variant2; // this is short with text on video
+    // const shortWithAnswerAndLogo = await putPngOnVideo_v3(
+    //   CURRENT_EXAM_SUBFOLDER,
+    //   shortVideo_variant,
+    //   png2,
+    //   0,
+    //   0,
+    //   "__7 short_with_answer_and_logo"
+    // );
+    // const safeFileNameWithId = safeFileName(`${text}`);
+    // const shortWithQuestionAndAnswer = await mergeVideos_v2(
+    //   [shortVideo_variant, shortWithAnswerAndLogo],
+    //   p(CURRENT_EXAM_SUBFOLDER, `__8 ${safeFileNameWithId}.mp4`)
+    // );
+    // copyFileSync(shortWithQuestionAndAnswer, p(PRODUCED_FOLDER, "_shorts", `${safeFileNameWithId}.mp4`));
+  }
+
+  return { video: singleFinalVideo, text, duration: singleVideoDuration };
 }

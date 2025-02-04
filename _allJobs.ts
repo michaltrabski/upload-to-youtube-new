@@ -1,6 +1,22 @@
 import { Job } from "./_utils/types";
 import { p } from "./_utils/utils";
 
+const videoOPrawieJazdy: Job = {
+  TYPE: "MAKE_HORIZONTAL_VIDEO",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.2,
+  TRIM_LATER: 0.4,
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 0.5,
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 99999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "wideo-o-przwie-jazdy"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: true,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 const makeHorizontalVideos: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
@@ -68,6 +84,22 @@ const createLongVideosWithDrivingQuestions: Job = {
   GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
   BASE_DIR: p(__dirname),
   BASE_FOLDER: p(__dirname, "video_testy"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
+const createExamFromMichalQuestions: Job = {
+  TYPE: "CREATE_EXAM_FROM_MICHAL_QUESTIONS",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl"
+  TRIM_EALIER: 0.5, // 0.3
+  TRIM_LATER: 1, // 0.5
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "pytania-od-michala"),
   FLIP_CHUNK: false,
   MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
   CREATE_VERTICAL_CHUNKS: false,
@@ -276,22 +308,6 @@ const dieselHeaterVerticalVideo: Job = {
   MERGE_ALL_VERTICAL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
-const mergeVideos: Job = {
-  TYPE: "MERGE_VIDEOS",
-  ORIENTATION: "HORIZONTAL",
-  DEEPGRAM_LANG: "pl", // "en" | "pl"
-  TRIM_EALIER: 1, // 0.3
-  TRIM_LATER: 1, // 0.5
-  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // 0.9
-  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999,
-  BASE_DIR: p(__dirname),
-  BASE_FOLDER: p(__dirname, "merge-videos"),
-  FLIP_CHUNK: false,
-  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
-  CREATE_VERTICAL_CHUNKS: false,
-  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
-};
-
 const parkAcarHorizontalVideo: Job = {
   TYPE: "MAKE_HORIZONTAL_VIDEO",
   ORIENTATION: "HORIZONTAL",
@@ -359,6 +375,54 @@ const generateAnyVideo: Job = {
   MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
 };
 
+const mergeVideos1: Job = {
+  TYPE: "MERGE_VIDEOS",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl" it has no effect
+  TRIM_EALIER: 1, // it has no effect
+  TRIM_LATER: 1, // it has no effect
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // it has no effect
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999, // it has no effect
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "merge-videos-1"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
+const mergeVideos2: Job = {
+  TYPE: "MERGE_VIDEOS",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl" it has no effect
+  TRIM_EALIER: 1, // it has no effect
+  TRIM_LATER: 1, // it has no effect
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // it has no effect
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999, // it has no effect
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "merge-videos-2"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
+const mergeVideos3: Job = {
+  TYPE: "MERGE_VIDEOS",
+  ORIENTATION: "HORIZONTAL",
+  DEEPGRAM_LANG: "pl", // "en" | "pl" it has no effect
+  TRIM_EALIER: 1, // it has no effect
+  TRIM_LATER: 1, // it has no effect
+  MIN_GAP_BEEWEEN_WORDS_TO_SPLICE_VIDEO: 2, // it has no effect
+  GAP_TO_DETERMIN_WHEN_NEXT_VIDEO_START: 999999, // it has no effect
+  BASE_DIR: p(__dirname),
+  BASE_FOLDER: p(__dirname, "merge-videos-3"),
+  FLIP_CHUNK: false,
+  MERGE_CHUNKS_IN_EVERY_SINGLE_FOLDER: false,
+  CREATE_VERTICAL_CHUNKS: false,
+  MERGE_ALL_CHUNKS_FROM_ALL_FOLDERS: false,
+};
+
 export const ALL_JOBS: Job[] = [
   // HORIZONTAL
   // { ...createChunksHorizontalVideo, EXECUTE: false },
@@ -366,7 +430,9 @@ export const ALL_JOBS: Job[] = [
   // { ...jazdaPoStrefieEgzaminacyjnejHorizontalVideo, EXECUTE: false },
   // { ...eBikeHorizontalVideo, EXECUTE: false },
   // { ...eBikeHorizontalVideoGarmin, EXECUTE: false },
-  // { ...mergeVideos, EXECUTE: false },
+  { ...mergeVideos1, EXECUTE: false },
+  { ...mergeVideos2, EXECUTE: false },
+  { ...mergeVideos3, EXECUTE: false },
 
   // VERTICAL
   // { ...eBikeVerticalVideo, EXECUTE: false },
@@ -376,17 +442,19 @@ export const ALL_JOBS: Job[] = [
   // JAVASCRIPT VIDEOS
   { ...codingVideos, EXECUTE: false },
 
-  // NAUKA JAZDY
-  // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
-  // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
-  { ...createExam, EXECUTE: false },
-  { ...createExamEn, EXECUTE: false },
-
   // FILMY ROWEROWE
   { ...rower_przyspieszone_wideo_z_gadaniem, EXECUTE: false },
   { ...rower_jazda_z_garminem_i_gadaniem, EXECUTE: false },
   { ...rower_pokazywanie_roweru_stojącego, EXECUTE: false },
 
   // GENEROWANIE WIDEO
-  { ...generateAnyVideo, EXECUTE: true },
+  { ...videoOPrawieJazdy, EXECUTE: false }, // to mergowanie shortów nagranych telefonem
+  { ...generateAnyVideo, EXECUTE: false }, // tworzenie filmu z tablicy tekstów i promptow do obrazkow
+
+  // NAUKA JAZDY
+  // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
+  // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
+  { ...createExamFromMichalQuestions, EXECUTE: true },
+  { ...createExam, EXECUTE: false },
+  { ...createExamEn, EXECUTE: true },
 ];

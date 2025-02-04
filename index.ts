@@ -18,7 +18,7 @@ import {
 import path from "path";
 import { getSilentParts } from "@remotion/renderer";
 
-import { ChunkFromVideo, TextAndMediaInExam, TranscriptionFormDeepgram, VideoChunk } from "./types";
+import { ChunkFromVideo, ArticleData, TranscriptionFormDeepgram, VideoChunk } from "./types";
 import {
   createHtmlPreview,
   createScreenshot,
@@ -58,7 +58,7 @@ import {
 import { createVideoWithAnyExamQuestions } from "./_utils/testy-na-prawo-jazdy/videoWithAnyQuestions";
 import { getAllMp3InFolder, getAllMp4InFolder } from "./utils_v2";
 import { createExam } from "./_utils/testy-na-prawo-jazdy/testyExam";
-import { ExamDataObj } from "./_utils/testy-na-prawo-jazdy/data/types";
+import { ExamData, ExamDataObj, QuestionBigObjMichal } from "./_utils/testy-na-prawo-jazdy/data/types";
 import { generateImages } from "./_utils/generateImages";
 import { putTextOnPng } from "./_utils/jimp_v2";
 import {
@@ -195,22 +195,23 @@ async function main() {
         continue;
       }
 
-      videos.forEach((video, i) => log(i + 1, "video= ", video));
+      videos.forEach((video, i) => console.log(i + 1, "video= ", video));
 
       const mergedVideoPath = p(folder, "merged.mp4");
       await mergeVideos(videos, mergedVideoPath);
 
       const duration = await getVideoDuration(mergedVideoPath);
       log("duration", duration);
+      if (false) {
+        const bgMp3 = p(__dirname, "_mp3", "music1.mp3");
+        const bgMp3Trimmed = await trimMp3(bgMp3, p(folder, "bgMp3Trimmed.mp3"), 0, duration);
+        const mergedVideoPathWithBgMusic = p(folder, "mergedWithBgMusic.mp4");
 
-      const bgMp3 = p(__dirname, "_mp3", "music1.mp3");
-      const bgMp3Trimmed = await trimMp3(bgMp3, p(folder, "bgMp3Trimmed.mp3"), 0, duration);
-      const mergedVideoPathWithBgMusic = p(folder, "mergedWithBgMusic.mp4");
-
-      await mergeVideosWithBgMusic([mergedVideoPath], mergedVideoPathWithBgMusic, bgMp3Trimmed);
+        await mergeVideosWithBgMusic([mergedVideoPath], mergedVideoPathWithBgMusic, bgMp3Trimmed);
+      }
 
       // GENERATE THUMBNAILS IMAGES
-      if (true) {
+      if (false) {
         const pathTofileNameWithPrompts = p(folder, "_thumbnails-descriptions-prompts.json");
 
         if (!existsSync(pathTofileNameWithPrompts)) {
@@ -229,10 +230,49 @@ async function main() {
       await createSingleVideoExam(job);
     }
 
-    if (TYPE === "CREATE_EXAM") {
+    if (TYPE === "CREATE_EXAM_FROM_MICHAL_QUESTIONS") {
       const COUNT = 5;
       const LANG = "pl";
-      const FILE_WITH_DATA = "examDataObj30_difficultExams_b_1.json";
+      const FILE_WITH_DATA = "questions-big-michal.json";
+
+      for (let counter of [...Array(COUNT).keys()]) {
+        const questionsBigObjMichal: QuestionBigObjMichal = readJSONSync(
+          p(__dirname, "_utils", "testy-na-prawo-jazdy", "data", FILE_WITH_DATA)
+        );
+
+        const fakeExamData: ExamData = {
+          examName: "fakeExamData",
+          examSlug: "fakeExamData",
+          examCategory: "b",
+          minPointsToPass: 68,
+          allPossiblePoints: 74,
+          examQuestions32: questionsBigObjMichal.questionsBig,
+        };
+
+        const _podsumowanieEgzaminuPng = r(podsumowanieEgzaminuPng);
+        try {
+          await createExam(
+            job,
+            0,
+            [fakeExamData],
+            LANG,
+            [], // [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }],
+            [
+              { myText: r(zdalesEgzamin), media: _podsumowanieEgzaminuPng },
+              { myText: r(zapraszamNaPoznajTesty), media: _podsumowanieEgzaminuPng },
+            ]
+          );
+        } catch (error) {
+          console.log("createExam error", error);
+        }
+      }
+    }
+
+    if (TYPE === "CREATE_EXAM") {
+      const COUNT = 3;
+      const LANG = "pl";
+      const FILE_WITH_DATA = "examDataObj30_difficultExams_b_2.json";
+      // const FILE_WITH_DATA = "michal.json";
 
       for (let counter of [...Array(COUNT).keys()]) {
         const exams_b_random: ExamDataObj = readJSONSync(
@@ -246,7 +286,7 @@ async function main() {
             0,
             exams_b_random.exams,
             LANG,
-            [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }],
+            [], // [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }],
             [
               { myText: r(zdalesEgzamin), media: _podsumowanieEgzaminuPng },
               { myText: r(zapraszamNaPoznajTesty), media: _podsumowanieEgzaminuPng },
@@ -298,9 +338,42 @@ async function main() {
       for (let counter of [...Array(COUNT).keys()]) {
         const _podsumowanieEgzaminuPng = r(podsumowanieEgzaminuPng);
         try {
-          await generateAnyVideo(job, LANG, "nazwa-wygenerowanego-filmu", [
-            { myText: "witam wszystkich", media: "zdjecie-1.png" },
-            { myText: "a teraz żegnam wszystkich", media: "video-1.mp4" },
+          await generateAnyVideo(job, LANG, "zabieranie-prawa-jazdy", [
+            {
+              tekst: "Większość Polaków popiera dożywotnie odebranie prawa jazdy kierowcom z sądowym zakazem.",
+              imagePromptInEn: "A survey result showing public support for lifetime driving bans",
+            },
+            {
+              tekst: "Ponad pięćdziesiąt trzy procent respondentów zdecydowanie się zgadza.",
+              imagePromptInEn: "A group of people engaged in discussion about driving license laws",
+            },
+            {
+              tekst: "Szesnaście procent respondentów raczej się zgadza.",
+              imagePromptInEn: "A pie chart illustrating survey statistics",
+            },
+            {
+              tekst: "Tylko osiem procent jest raczej przeciw, a siedemnaście procent zdecydowanie przeciw.",
+              imagePromptInEn: "An argument between two people regarding driving licenses",
+            },
+            {
+              tekst: "Kobiety częściej popierają tę ideę niż mężczyźni.",
+              imagePromptInEn: "A woman advocating for strict driving license regulations",
+            },
+            {
+              tekst:
+                "Najwięcej zwolenników w grupie wiekowej powyżej siedemdziesięciu lat oraz osiemnaście-dwadzieścia dziewięć.",
+              imagePromptInEn: "An elderly person discussing road safety",
+            },
+            {
+              tekst:
+                "Wśród wyborców partii politycznych, za odebraniem prawa jazdy opowiada się siedemdziesiąt procent wyborców Konfederacji.",
+              imagePromptInEn: "Political supporters engaging in a debate over driving laws",
+            },
+            {
+              tekst:
+                "Sondaż przeprowadzono dziesiąte i jedenastego stycznia dwa tysiące dwadzieścia pięć na próbie tysiąc sześćdziesięciu ośmiu osób.",
+              imagePromptInEn: "A researcher conducting a public survey",
+            },
           ]);
         } catch (error) {
           console.log("GENERATE_ANY_VIDEO error", error);
@@ -791,10 +864,6 @@ async function getInfoFromTranscription(
           chunkFromVideo.trimEnd,
           format
         );
-
-        // const a = p(f(producedChunkPath).path, "a.MP4");
-        // const small = await manipulateVideo_v3(f(producedChunkPath).path, a, 30, 34, { size: "400x?" });
-        // const x = await putVideoOnVideoForRovery_v1(f(producedChunkPath).path, producedChunkPath, small, "vid on vid");
       } else {
         await createVideo(
           job,
