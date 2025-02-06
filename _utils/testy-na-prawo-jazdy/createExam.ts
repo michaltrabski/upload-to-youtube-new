@@ -55,8 +55,8 @@ export const createExam = async (
   textsAndMediaBeforeExam: TextAndMediaForExamVideo[],
   textsAndMediaAfterExam: TextAndMediaForExamVideo[]
 ): Promise<number> => {
-  // removeSync(job.BASE_FOLDER);
-  // removeSync(job.BASE_FOLDER + "_PRODUCED");
+  removeSync(job.BASE_FOLDER);
+  removeSync(job.BASE_FOLDER + "_PRODUCED");
 
   const scale = 1;
   const WIDTH = 1920 / scale;
@@ -723,6 +723,7 @@ async function createSingleQuestionVideo(
     let shape = classifyShape(sizeOf(sourceMedia).width, sizeOf(sourceMedia).height); // "vertical", "square" , "horizontal"
 
     log({ shape });
+
     const bg = await manipulateVideo_v4(
       CURRENT_EXAM_SUBFOLDER,
       baseVideo,
@@ -736,28 +737,30 @@ async function createSingleQuestionVideo(
       "bg"
     );
 
+    const innerSize = shape === "square" ? `${WIDTH / 1.5}x${HEIGHT / 1.5}` : `${WIDTH / 2}x${HEIGHT / 2}`;
     const inner = await manipulateVideo_v4(
       CURRENT_EXAM_SUBFOLDER,
       baseVideo,
       0,
       VIDEO_DURATION_LIMIT,
       {
-        size: `${WIDTH / 2}x${HEIGHT / 2}`,
+        size: innerSize,
         blur: 0,
         crop: 0,
       },
       "inner"
     );
 
-    throw new Error("STOPPPP");
-
     const videoInVideo = await putVideoOnVideo_v3(CURRENT_EXAM_SUBFOLDER, bg, inner, "videoInVideo");
 
     const videoInVideoVertical = await makeVideoVertical_v3(
       CURRENT_EXAM_SUBFOLDER,
-      videoInVideo,
+      shape === "vertical" ? baseVideo : videoInVideo,
       "videoInVideoVertical"
     );
+
+    // michal
+    // throw new Error("STOPPPP");
 
     const questionTextMp3Short = REMOTE_MP3_FOLDER + textToSlug160(text) + ".mp3";
 
@@ -825,15 +828,6 @@ async function createSingleQuestionVideo(
       HEIGHT - questionTextPNGforShortHeight - 300
     );
 
-    // const shortWithQuestionAndLogo_variant1 = await putPngOnVideo_v3(
-    //   CURRENT_EXAM_SUBFOLDER,
-    //   videoInVideoVerticalMp3,
-    //   png2,
-    //   0,
-    //   0,
-    //   "__6 short_with_question_and_logo"
-    // );
-
     const shortWithQuestionAndLogo_variant2 = await putPngOnVideo_v3(
       CURRENT_EXAM_SUBFOLDER,
       videoInVideoVerticalMp3,
@@ -843,8 +837,6 @@ async function createSingleQuestionVideo(
       "__6 short_with_question_and_logo"
     );
 
-    // const random0_1 = Math.floor(Math.random() * 2);
-    // const shortVideo_variant = random0_1 === 0 ? shortWithQuestionAndLogo_variant1 : shortWithQuestionAndLogo_variant2;
     const shortVideo_variant = shortWithQuestionAndLogo_variant2; // this is short with text on video
 
     const shortWithAnswerAndLogo = await putPngOnVideo_v3(
