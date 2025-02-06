@@ -394,8 +394,8 @@ export const downloadPngOrMp4 = async (sourceMediaRemote: string, dest: string) 
   return dest;
 };
 
-export const downloadVideo = async (url: string, outputPath: string, defaultMp4: string): Promise<string> => {
-  console.log(`Downloading mp4 from ${url}`);
+export const downloadVideoOrPng = async (url: string, outputPath: string, defaultFile: string): Promise<string> => {
+  console.log(`Downloading file from ${url}`);
 
   if (existsSync(outputPath)) {
     return outputPath;
@@ -405,14 +405,14 @@ export const downloadVideo = async (url: string, outputPath: string, defaultMp4:
     const response = await axios.get(url, { responseType: "arraybuffer" });
 
     if (response.status !== 200) {
-      return defaultMp4;
+      return defaultFile;
     }
 
     writeFileSync(outputPath, response.data);
 
     return outputPath;
   } catch (error) {
-    return defaultMp4;
+    return defaultFile;
   }
 };
 

@@ -6,7 +6,7 @@ import {
   convertSecondsToYtTimestamp,
   createScreenshot,
   downloadMp3,
-  downloadVideo,
+  downloadVideoOrPng,
   f,
   log,
   p,
@@ -54,7 +54,7 @@ export async function createSingleClip(
 ): Promise<{ video: string; text: string; duration: number }> {
   const MAIN_TEXT_FONT_SIZE = 50;
 
-  const singleTextVideoFullPath = p(CURRENT_EXAM_SUBFOLDER, `${safeFileName(media + text)}.mp4`);
+  const singleTextVideoFullPath = p(CURRENT_EXAM_SUBFOLDER, `${textToSlug160(media + "-" + text)}.mp4`);
 
   if (existsSync(singleTextVideoFullPath)) {
     const singleTextVideoDuration = await getVideoDuration(singleTextVideoFullPath);
@@ -85,7 +85,7 @@ export async function createSingleClip(
   const dest = p(CURRENT_EXAM_SUBFOLDER, media);
 
   const sourceMedia = isVideo
-    ? await downloadVideo(sourceMediaRemote, dest, silentMp4)
+    ? await downloadVideoOrPng(sourceMediaRemote, dest, silentMp4)
     : await downloadPng(sourceMediaRemote, dest);
 
   if (!existsSync(sourceMedia)) {
@@ -95,7 +95,7 @@ export async function createSingleClip(
 
   const imageToSourceVideo = async (sourceVideoOrPng: string): Promise<string> => {
     const resizeSourceMedia = await sharp(readFileSync(sourceVideoOrPng)).resize(WIDTH, HEIGHT).png().toBuffer();
-    const resizeSourceMediaPath = p(CURRENT_EXAM_SUBFOLDER, `${safeFileName(media + text)}.png`);
+    const resizeSourceMediaPath = p(CURRENT_EXAM_SUBFOLDER, `${textToSlug160(media + "-" + text)}.png`);
     writeFileSync(resizeSourceMediaPath, resizeSourceMedia);
 
     const mp4_1000Resized = await manipulateVideo_v2(mp4_1000, 0, VIDEO_DURATION_LIMIT, {

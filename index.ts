@@ -57,7 +57,7 @@ import {
 } from "./_utils/ffmpeg-v2";
 import { createVideoWithAnyExamQuestions } from "./_utils/testy-na-prawo-jazdy/videoWithAnyQuestions";
 import { getAllMp3InFolder, getAllMp4InFolder } from "./utils_v2";
-import { createExam } from "./_utils/testy-na-prawo-jazdy/testyExam";
+import { createExam } from "./_utils/testy-na-prawo-jazdy/createExam";
 import { ExamData, ExamDataObj, QuestionBigObjMichal } from "./_utils/testy-na-prawo-jazdy/data/types";
 import { generateImages } from "./_utils/generateImages";
 import { putTextOnPng } from "./_utils/jimp_v2";
@@ -231,7 +231,7 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM_FROM_MICHAL_QUESTIONS") {
-      const COUNT = 5;
+      const COUNT = 1;
       const LANG = "pl";
       const FILE_WITH_DATA = "questions-big-michal.json";
 
@@ -249,19 +249,8 @@ async function main() {
           examQuestions32: questionsBigObjMichal.questionsBig,
         };
 
-        const _podsumowanieEgzaminuPng = r(podsumowanieEgzaminuPng);
         try {
-          await createExam(
-            job,
-            0,
-            [fakeExamData],
-            LANG,
-            [], // [{ myText: r(rozpoczynamyEgzamin), media: r(rozpocznijEgzaminMp4) }],
-            [
-              { myText: r(zdalesEgzamin), media: _podsumowanieEgzaminuPng },
-              { myText: r(zapraszamNaPoznajTesty), media: _podsumowanieEgzaminuPng },
-            ]
-          );
+          await createExam(job, 0, [fakeExamData], LANG, [], []);
         } catch (error) {
           console.log("createExam error", error);
         }
@@ -306,7 +295,7 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM_EN") {
-      const COUNT_EN = 5;
+      const COUNT_EN = 3;
       const FILE_WITH_DATA_EN = "examDataObj30_difficultExams_b_en_1.json";
 
       for (let counter of [...Array(COUNT_EN).keys()]) {
@@ -336,43 +325,12 @@ async function main() {
       const LANG = "pl";
 
       for (let counter of [...Array(COUNT).keys()]) {
-        const _podsumowanieEgzaminuPng = r(podsumowanieEgzaminuPng);
         try {
-          await generateAnyVideo(job, LANG, "zabieranie-prawa-jazdy", [
-            {
-              tekst: "Większość Polaków popiera dożywotnie odebranie prawa jazdy kierowcom z sądowym zakazem.",
-              imagePromptInEn: "A survey result showing public support for lifetime driving bans",
-            },
-            {
-              tekst: "Ponad pięćdziesiąt trzy procent respondentów zdecydowanie się zgadza.",
-              imagePromptInEn: "A group of people engaged in discussion about driving license laws",
-            },
-            {
-              tekst: "Szesnaście procent respondentów raczej się zgadza.",
-              imagePromptInEn: "A pie chart illustrating survey statistics",
-            },
-            {
-              tekst: "Tylko osiem procent jest raczej przeciw, a siedemnaście procent zdecydowanie przeciw.",
-              imagePromptInEn: "An argument between two people regarding driving licenses",
-            },
-            {
-              tekst: "Kobiety częściej popierają tę ideę niż mężczyźni.",
-              imagePromptInEn: "A woman advocating for strict driving license regulations",
-            },
+          await generateAnyVideo(job, LANG, "O czym jest u", [
             {
               tekst:
-                "Najwięcej zwolenników w grupie wiekowej powyżej siedemdziesięciu lat oraz osiemnaście-dwadzieścia dziewięć.",
-              imagePromptInEn: "An elderly person discussing road safety",
-            },
-            {
-              tekst:
-                "Wśród wyborców partii politycznych, za odebraniem prawa jazdy opowiada się siedemdziesiąt procent wyborców Konfederacji.",
-              imagePromptInEn: "Political supporters engaging in a debate over driving laws",
-            },
-            {
-              tekst:
-                "Sondaż przeprowadzono dziesiąte i jedenastego stycznia dwa tysiące dwadzieścia pięć na próbie tysiąc sześćdziesięciu ośmiu osób.",
-              imagePromptInEn: "A researcher conducting a public survey",
+                "Ustawa prawo o ruchu drogowym reguluje zasady poruszania się na drogach publicznych oraz w strefach zamieszkania i ruchu. Określa zasady dopuszczania pojazdów do ruchu oraz działalność odpowiednich organów w tym zakresie. Ustawa również ustala wymagania dotyczące innych uczestników ruchu, nie tylko kierowców, oraz zasady kontroli ruchu drogowego. Przepisy te mają zastosowanie także poza wymienionymi miejscami, w sytuacjach wymagających ochrony bezpieczeństwa osób oraz w oparciu o znaki i sygnały drogowe. Ponadto, ustawa określa zadania samorządu województwa związane z administracją rządową.",
+              media: "D18_1org.mp4",
             },
           ]);
         } catch (error) {

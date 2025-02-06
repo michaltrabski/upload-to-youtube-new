@@ -83,7 +83,8 @@ export interface ChunkFromVideo {
 
 export interface ArticleData {
   tekst: string;
-  imagePromptInEn: string;
+  imagePromptInEn?: string;
+  media?: string;
 }
 
 export interface TextAndMediaForExamVideo {

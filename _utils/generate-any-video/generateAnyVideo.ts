@@ -46,38 +46,15 @@ export const generateAnyVideo = async (
   const GAP = 20;
   const PNG_BG_COLOR = "rgb(71 85 105)";
   const PNG_BG_COLOR_GREEN = "#15803d";
-  // const START_NR = 1;
-  // const START_INDEX = START_NR - 1;
-  // const HOW_MANY_QUESTIONS_TO_CREATE = 999999999;
-  // const LIMIT = START_INDEX + HOW_MANY_QUESTIONS_TO_CREATE;
-
-  // const scale = 1;
-  // const WIDTH = 1920 / scale;
-  // const HEIGHT = 1080 / scale;
-  // const VIDEO_DURATION_LIMIT = 99999999;
-  // const GAP = 20;
-  // const PNG_BG_COLOR = "rgb(71 85 105)";
-  // const PNG_BG_COLOR_GREEN = "#15803d";
-  // const START_NR = 19;
-  // const START_INDEX = START_NR - 1;
-  // const HOW_MANY_QUESTIONS_TO_CREATE = 3;
-  // const LIMIT = START_INDEX + HOW_MANY_QUESTIONS_TO_CREATE;
-
-  //   const currentExam = exams[examIndex];
-  //   const { examQuestions32, examSlug } = currentExam;
-
-  //   const examQuestions32Limited = examQuestions32.slice(START_INDEX, LIMIT);
 
   const { BASE_DIR, BASE_FOLDER } = job;
   const pb = (path: string) => p(BASE_FOLDER, path);
-  const CURRENT_EXAM_SUBFOLDER = pb(generatedVideoName);
+  const CURRENT_EXAM_SUBFOLDER = pb(textToSlug160(generatedVideoName));
   const PRODUCED_FOLDER = `${BASE_FOLDER}_PRODUCED`;
   ensureDirSync(BASE_FOLDER);
   ensureDirSync(CURRENT_EXAM_SUBFOLDER);
   ensureDirSync(PRODUCED_FOLDER);
   ensureDirSync(`${PRODUCED_FOLDER}/_shorts`);
-
-  //   console.log("examQuestions32Limited", { ...currentExam, examQuestions32: `${examQuestions32.length} pytania...` });
 
   const size = `${WIDTH}x${HEIGHT}`;
 
@@ -91,14 +68,14 @@ export const generateAnyVideo = async (
   const texts: string[] = [];
   const durations: number[] = [];
 
-  for (const { tekst, imagePromptInEn } of articleData) {
+  for (const { tekst, imagePromptInEn, media } of articleData) {
     const myText = tekst;
-    const media = textToSlug160(imagePromptInEn) + ".png";
+    const _media = imagePromptInEn ? textToSlug160(imagePromptInEn) + ".png" : media || "blank.png";
 
     const { video, text, duration } = await createSingleClip(
       CURRENT_EXAM_SUBFOLDER,
       myText, // to przykładowy text
-      media,
+      _media,
       "https://hosting2421517.online.pro/generate-any-video/",
       blankPng,
       mp4_1000,
@@ -134,13 +111,16 @@ export const generateAnyVideo = async (
     timestampsText += `${timestamp.timestamp} ${ii}. ${timestamp.text}\n\n`;
   }
 
-  const timestampFile = p(CURRENT_EXAM_SUBFOLDER, `${generatedVideoName}.txt`);
+  const timestampFile = p(CURRENT_EXAM_SUBFOLDER, `${textToSlug160(generatedVideoName)}.txt`);
   writeFileSync(timestampFile, timestampsText);
   copyFileSync(timestampFile, p(PRODUCED_FOLDER, f(timestampFile).nameWithExt));
 
   const videosWithAdds = [...videos];
 
-  const examVideo = await mergeVideos_v2(videosWithAdds, p(CURRENT_EXAM_SUBFOLDER, `${generatedVideoName}.mp4`));
+  const examVideo = await mergeVideos_v2(
+    videosWithAdds,
+    p(CURRENT_EXAM_SUBFOLDER, `${textToSlug160(generatedVideoName)}.mp4`)
+  );
 
   const producedVideoPath = p(PRODUCED_FOLDER, f(examVideo).nameWithExt);
   copyFileSync(examVideo, producedVideoPath);

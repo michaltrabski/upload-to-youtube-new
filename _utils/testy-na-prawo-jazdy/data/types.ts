@@ -118,7 +118,7 @@ export interface ExamData {
   examCategory: string;
   minPointsToPass: number;
   allPossiblePoints: number;
-  examQuestions32: (QuestionSmall | QuestionBig)[];
+  examQuestions32: QuestionSmall[];
 }
 
 export interface ExamDataObj {

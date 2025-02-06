@@ -6,7 +6,7 @@ import {
   convertSecondsToYtTimestamp,
   createScreenshot,
   downloadMp3,
-  downloadVideo,
+  downloadVideoOrPng,
   f,
   log,
   p,
@@ -29,6 +29,7 @@ import {
   trimVideo_v3,
 } from "../ffmpeg-v3";
 import { t } from "./translations";
+import { REMOTE_MEDIA_FOLDER, REMOTE_MP3_FOLDER } from "./createExam";
 
 type Lang = "pl" | "en" | "de";
 
@@ -36,7 +37,7 @@ export async function createSingleTextVideo(
   CURRENT_EXAM_SUBFOLDER: string,
   text: string,
   media: string,
-  remoteFolderWithMp4: string,
+  // remoteFolderWithMp4: string,
   blankPng: string,
   mp4_1000: string,
   WIDTH: number,
@@ -46,7 +47,7 @@ export async function createSingleTextVideo(
   PNG_BG_COLOR_GREEN: string,
   scale: number,
   size: string,
-  remoteFolderWithMp3: string,
+  // remoteFolderWithMp3: string,
   mp3_1000: string,
   VIDEO_DURATION_LIMIT: number,
   PRODUCED_FOLDER: string,
@@ -62,7 +63,7 @@ export async function createSingleTextVideo(
   const silentMp3 = p(__dirname, "../", "../", "_silent_mp3", "1000.mp3");
   const singleTextMp3FileName = textToSlug160(text) + ".mp3";
   const singleTextMp3 = await downloadMp3(
-    remoteFolderWithMp3 + singleTextMp3FileName,
+    REMOTE_MP3_FOLDER + singleTextMp3FileName,
     p(CURRENT_EXAM_SUBFOLDER, singleTextMp3FileName),
     silentMp3
   );
@@ -78,12 +79,12 @@ export async function createSingleTextVideo(
   };
 
   const isVideo = media.includes(".mp4");
-  const sourceMediaRemote = remoteFolderWithMp4 + media;
+  const sourceMediaRemote = REMOTE_MEDIA_FOLDER + media;
   const silentMp4 = p(__dirname, "../", "../", "_silent_mp3", "1000.mp4");
   const dest = p(CURRENT_EXAM_SUBFOLDER, media);
 
   const sourceMedia = isVideo
-    ? await downloadVideo(sourceMediaRemote, dest, silentMp4)
+    ? await downloadVideoOrPng(sourceMediaRemote, dest, silentMp4)
     : await downloadPng(sourceMediaRemote, dest);
 
   if (!existsSync(sourceMedia)) {

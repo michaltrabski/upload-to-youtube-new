@@ -449,12 +449,12 @@ export const ALL_JOBS: Job[] = [
 
   // GENEROWANIE WIDEO
   { ...videoOPrawieJazdy, EXECUTE: false }, // to mergowanie shortów nagranych telefonem
-  { ...generateAnyVideo, EXECUTE: false }, // tworzenie filmu z tablicy tekstów i promptow do obrazkow
 
   // NAUKA JAZDY
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
   { ...createExamFromMichalQuestions, EXECUTE: true },
+  { ...createExamEn, EXECUTE: false },
   { ...createExam, EXECUTE: false },
-  { ...createExamEn, EXECUTE: true },
+  { ...generateAnyVideo, EXECUTE: false }, // tworzenie filmu z tablicy tekstów i promptow do obrazkow
 ];

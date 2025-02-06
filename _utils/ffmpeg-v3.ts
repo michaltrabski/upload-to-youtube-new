@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
+import { PNG } from "pngjs";
 import md5 from "md5";
 
 const sizeOf = require("image-size");
@@ -11,6 +12,53 @@ import { f, log, p } from "./utils";
 import { getVideoDurationInMiliseconds } from "./ffmpeg";
 
 const PREVENT_OVERRIDE = true;
+
+export async  function centerTrimPng(filePath: string, maxWidth: number, maxHeight: number): Promise<void> {
+  try {
+    const data = await fs.readFile(filePath);
+    const png = PNG.sync.read(data);
+
+    const originalWidth = png.width;
+    const originalHeight = png.height;
+
+    if (originalWidth <= maxWidth && originalHeight <= maxHeight) {
+      console.log("Image is already within the size limits. No trimming needed.");
+      return;
+    }
+
+    const trimmedWidth = Math.min(maxWidth, originalWidth);  // Don't exceed original size
+    const trimmedHeight = Math.min(maxHeight, originalHeight); // Don't exceed original size
+
+    const startX = Math.floor((originalWidth - trimmedWidth) / 2);
+    const startY = Math.floor((originalHeight - trimmedHeight) / 2);
+
+    const trimmedPng = new PNG({ width: trimmedWidth, height: trimmedHeight });
+
+    for (let y = 0; y < trimmedHeight; y++) {
+      for (let x = 0; x < trimmedWidth; x++) {
+        const originalX = startX + x;
+        const originalY = startY + y;
+
+        const originalIdx = (originalY * originalWidth + originalX) * 4;
+        const trimmedIdx = (y * trimmedWidth + x) * 4;
+
+        trimmedPng.data[trimmedIdx] = png.data[originalIdx];        // Red
+        trimmedPng.data[trimmedIdx + 1] = png.data[originalIdx + 1];  // Green
+        trimmedPng.data[trimmedIdx + 2] = png.data[originalIdx + 2];  // Blue
+        trimmedPng.data[trimmedIdx + 3] = png.data[originalIdx + 3];  // Alpha
+      }
+    }
+
+    const trimmedBuffer = PNG.sync.write(trimmedPng);
+    await fs.writeFile(filePath, trimmedBuffer); // Overwrite (be careful!)
+
+    console.log(`Image center-trimmed to ${trimmedWidth}x${trimmedHeight} and saved to ${filePath}`);
+
+  } catch (err) {
+    console.error("Error center-trimming PNG:", err);
+    throw err;
+  }
+}
 
 export const textToPng_v3 = async (
   baseFolder: string,
