@@ -258,9 +258,9 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM") {
-      const COUNT = 3;
+      const COUNT = 2;
       const LANG = "pl";
-      const FILE_WITH_DATA = "examDataObj30_difficultExams_b_2.json";
+      const FILE_WITH_DATA = "examDataObj30_difficultExams_b_1.json";
       // const FILE_WITH_DATA = "michal.json";
 
       for (let counter of [...Array(COUNT).keys()]) {
@@ -295,7 +295,7 @@ async function main() {
     }
 
     if (TYPE === "CREATE_EXAM_EN") {
-      const COUNT_EN = 3;
+      const COUNT_EN = 2;
       const FILE_WITH_DATA_EN = "examDataObj30_difficultExams_b_en_1.json";
 
       for (let counter of [...Array(COUNT_EN).keys()]) {

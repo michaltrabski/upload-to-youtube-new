@@ -453,8 +453,23 @@ export const ALL_JOBS: Job[] = [
   // NAUKA JAZDY
   // { ...createLongVideosWithDrivingQuestions, EXECUTE: false },
   // { ...videosWithAnyDrivingQuestions, EXECUTE: false },
-  { ...createExamFromMichalQuestions, EXECUTE: true },
-  { ...createExamEn, EXECUTE: false },
-  { ...createExam, EXECUTE: false },
+  { ...createExamFromMichalQuestions, EXECUTE: false },
   { ...generateAnyVideo, EXECUTE: false }, // tworzenie filmu z tablicy tekstów i promptow do obrazkow
+
+  { ...createExamEn, EXECUTE: true },
+
+  // { ...createExam, EXECUTE: true },
+  // { ...createExamEn, EXECUTE: true },
+
+  // { ...createExam, EXECUTE: true },
+  // { ...createExamEn, EXECUTE: true },
+
+  // { ...createExam, EXECUTE: true },
+  // { ...createExamEn, EXECUTE: true },
+
+  // { ...createExam, EXECUTE: true },
+  // { ...createExamEn, EXECUTE: true },
+
+  // { ...createExam, EXECUTE: true },
+  // { ...createExamEn, EXECUTE: true },
 ];

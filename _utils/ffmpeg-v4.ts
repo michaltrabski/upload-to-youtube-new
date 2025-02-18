@@ -43,10 +43,10 @@ export async function manipulateVideo_v4(
 
     const producedVideoPathTemp = p(f(producedVideoPath).path, `x__temp_${rnd}.mp4`);
 
-    const from = originalVideoTrimFrom;
-    const to = originalVideoTrimTo;
+    // const from = originalVideoTrimFrom;
+    // const to = originalVideoTrimTo;
 
-    const { name, ext, path } = f(producedVideoPath);
+    // const { name, ext, path } = f(producedVideoPath);
 
     const command = ffmpeg()
       .input(originalVideoPath)

@@ -47,6 +47,10 @@ type Lang = "pl" | "en" | "de";
 export const REMOTE_MEDIA_FOLDER = "https://hosting2421517.online.pro/testy-na-prawo-jazdy/size-full/";
 export const REMOTE_MP3_FOLDER = "https://hosting2421517.online.pro/testy-na-prawo-jazdy/mp3/";
 
+const SLATE_400 = "#90a1b9";
+const SLATE_600 = "#45556c";
+const POZNAJ_TESTY_SHORTS_COLOR = SLATE_400;
+
 export const createExam = async (
   job: Job,
   examIndex: number,
@@ -55,9 +59,6 @@ export const createExam = async (
   textsAndMediaBeforeExam: TextAndMediaForExamVideo[],
   textsAndMediaAfterExam: TextAndMediaForExamVideo[]
 ): Promise<number> => {
-  removeSync(job.BASE_FOLDER);
-  removeSync(job.BASE_FOLDER + "_PRODUCED");
-
   const scale = 1;
   const WIDTH = 1920 / scale;
   const HEIGHT = 1080 / scale;
@@ -266,11 +267,11 @@ async function createSingleQuestionVideo(
 
   log(`createSingleQuestionVideo() ${f(singleQuestionVideo).nameWithExt}`, "");
 
-  log("michal chwilowo nadpisuje wideo");
-  // if (existsSync(singleQuestionVideo)) {
-  //   const singleVideoDurationMs = await getVideoDurationInMiliseconds(singleQuestionVideo);
-  //   return { video: singleQuestionVideo, text, duration: singleVideoDurationMs / 1000 };
-  // }
+  // log("michal chwilowo nadpisuje wideo");
+  if (existsSync(singleQuestionVideo)) {
+    const singleVideoDurationMs = await getVideoDurationInMiliseconds(singleQuestionVideo);
+    return { video: singleQuestionVideo, text, duration: singleVideoDurationMs / 1000 };
+  }
 
   let questionText = text;
   if (r !== "t" && r !== "n") questionText = `${text} ${a} ${b} ${c}`;
@@ -694,8 +695,6 @@ async function createSingleQuestionVideo(
   const createdShortsIdsFile = p(__dirname, "createdShortsIds.json");
   const createdShortsIds = readJsonSync(createdShortsIdsFile);
 
-  // && !createdShortsIds[lang].includes(id)
-
   function classifyShape(width: number, height: number) {
     // Input validation: Ensure width and height are positive numbers.
     if (typeof width !== "number" || typeof height !== "number" || width <= 0 || height <= 0) {
@@ -716,11 +715,16 @@ async function createSingleQuestionVideo(
       return "horizontal"; // Handles edge cases or very specific shapes
     }
   }
-
-  if (true && media) {
+  // && !createdShortsIds[lang].includes(id)
+  if (true && media && !createdShortsIds[lang].includes(id)) {
     // michal
 
-    let shape = classifyShape(sizeOf(sourceMedia).width, sizeOf(sourceMedia).height); // "vertical", "square" , "horizontal"
+    let shape = "horizontal";
+
+    if (!isVideo) {
+      // classifyShape is not for video so assume all videos are horizontal for now
+      shape = classifyShape(sizeOf(sourceMedia).width, sizeOf(sourceMedia).height); // "vertical", "square" , "horizontal"
+    }
 
     log({ shape });
 
@@ -759,8 +763,18 @@ async function createSingleQuestionVideo(
       "videoInVideoVertical"
     );
 
-    // michal
-    // throw new Error("STOPPPP");
+    const videoInVideoVerticalLastFrame = await manipulateVideo_v4(
+      CURRENT_EXAM_SUBFOLDER,
+      videoInVideoVertical,
+      duration - 0.05,
+      duration,
+      {
+        // size,
+        // blur: 0,
+        // crop: 0,
+      },
+      "videoInVideoVertical_lastFrame"
+    );
 
     const questionTextMp3Short = REMOTE_MP3_FOLDER + textToSlug160(text) + ".mp3";
 
@@ -773,7 +787,7 @@ async function createSingleQuestionVideo(
 
     const shortWithAnswer = await addMp3ToVideo_v3(
       CURRENT_EXAM_SUBFOLDER,
-      videoInVideoVertical,
+      videoInVideoVerticalLastFrame, //videoInVideoVertical
       correctAnswerMp3,
       "__2 short_with_answer_mp3"
     );
@@ -785,16 +799,17 @@ async function createSingleQuestionVideo(
       p(CURRENT_EXAM_SUBFOLDER, "__3 transparentShort.png")
     );
 
-    const [odwiedzStrone, odwiedzStroneWidth, odwiedzStroneHeight] = await textToPng_v3(
+    const [odwiedzStrone] = await textToPng_v3(
       CURRENT_EXAM_SUBFOLDER,
       t.zobaczNaszaStrone[lang],
       { fontSize: 20, bgColor: "transparent" },
       "__0 odwiedzStrone"
     );
+
     const [poznajTesty, poznajTestyWidth, poznajTestyHeight] = await textToPng_v3(
       CURRENT_EXAM_SUBFOLDER,
       "poznaj-testy.pl",
-      { fontSize: 30, bgColor: "yellow", lineHeight: 40 },
+      { fontSize: 30, bgColor: POZNAJ_TESTY_SHORTS_COLOR, lineHeight: 40 },
       "__4 poznajTesty"
     );
 
